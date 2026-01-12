@@ -2,44 +2,80 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Karaoke Player Screen</title>
+    <title>Karaoke Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #000; color: white; margin: 0; overflow: hidden; font-family: sans-serif; }
+        body { background-color: #000; margin: 0; overflow: hidden; font-family: 'Sarabun', sans-serif; }
         #player { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        /* Layer ข้อมูลที่จะลอยอยู่เหนือวิดีโอ */
         #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
-            pointer-events: none; /* ให้คลิกทะลุไปโดน YouTube ได้ */
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            pointer-events: none; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        /* กล่อง QR Code มุมขวาล่าง */
         #qr-container {
-            position: absolute; bottom: 20px; right: 20px;
+            position: absolute; bottom: 40px; right: 40px;
             background: rgba(255, 255, 255, 0.9);
-            padding: 10px; border-radius: 10px;
-            text-align: center; color: black;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            padding: 15px 20px; border-radius: 16px;
+            text-align: center; color: #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease;
         }
-        #qr-code img { display: block; margin: 0 auto; }
-        .scan-text { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        #qr-code img { display: block; border: 4px solid white; border-radius: 4px; }
+        .room-label { font-size: 14px; font-weight: bold; color: #d32f2f; margin-bottom: 5px; text-transform: uppercase; }
 
-        /* ข้อความสถานะ */
-        #status { font-size: 3em; text-shadow: 2px 2px 4px #000; margin-bottom: 20px; text-align: center;}
+        #status-bar { 
+            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); padding: 15px 30px; border-radius: 50px;
+            text-align: center; color: white; display: none; border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+        .status-title { font-size: 24px; font-weight: bold; white-space: nowrap; max-width: 80vw; overflow: hidden; text-overflow: ellipsis; }
+        .status-singer { font-size: 18px; color: #ffca28; margin-top: 5px; }
+
+        #idle-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 5; color: white; text-align: center;
+        }
+
+        /* ปุ่มเริ่มระบบ (สำคัญมาก) */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
+        }
+        .play-btn { font-size: 80px; color: white; transition: transform 0.2s; }
+        .play-btn:hover { transform: scale(1.1); color: #4CAF50; }
     </style>
 </head>
 <body>
 
+    <div id="start-overlay" onclick="startSystem()">
+        <div class="play-btn">▶</div>
+        <h2 style="color:white; margin-top:20px;">คลิกเพื่อเริ่มระบบคาราโอเกะ</h2>
+        <p style="color:#aaa;">(จำเป็นต้องคลิกเพื่อให้เสียงออก)</p>
+    </div>
+
+    <div id="idle-screen">
+        <h1>🎵 Karaoke Ready</h1>
+        <p style="font-size: 1.5em;">สแกน QR Code เพื่อเลือกเพลง</p>
+    </div>
+
     <div id="player"></div>
 
     <div id="overlay">
-        <h1 id="status">รอเพลง...</h1>
+        <div id="status-bar">
+            <div class="status-title" id="song-title">Song Title</div>
+            <div class="status-singer" id="song-singer">🎤 Requester</div>
+        </div>
         
         <div id="qr-container">
-            <div class="scan-text">สแกนเพื่อสั่งเพลง 📱</div>
+            <div class="room-label" id="roomLabel">ROOM: DEFAULT</div>
             <div id="qr-code"></div>
-            <div id="ip-text" style="font-size:10px; margin-top:2px; color:#555;">Loading...</div>
+            <div style="font-size:12px; margin-top:5px;">สแกนเลย!</div>
         </div>
     </div>
 
@@ -48,28 +84,70 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-        const socket = io();
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentRoom = urlParams.get('room') || 'MainHall';
+        document.getElementById('roomLabel').innerText = `ROOM: ${currentRoom}`;
+
+        const socket = io({ transports: ['websocket'] });
         let player;
 
-        // รับ IP จาก Server มาสร้าง QR Code
-        socket.on('serverDomain', (ip) => {
-            const url = `${ip}/admin.html`;
-            document.getElementById('ip-text').innerText = url;
+        function startSystem() {
+            document.getElementById('start-overlay').style.opacity = '0';
+            setTimeout(() => { document.getElementById('start-overlay').style.display = 'none'; }, 500);
             
-            // ล้าง QR เก่า (ถ้ามี) แล้วสร้างใหม่
+            if (player && player.playVideo) {
+                player.playVideo(); 
+                setTimeout(() => { player.pauseVideo(); }, 100);
+            }
+        }
+
+        socket.on('connect', () => {
+            socket.emit('joinRoom', currentRoom);
+        });
+
+        socket.on('serverDomain', (url) => {
             document.getElementById('qr-code').innerHTML = "";
             new QRCode(document.getElementById("qr-code"), {
-                text: url,
-                width: 128,
-                height: 128
+                text: url, width: 140, height: 140, colorDark : "#000000", colorLight : "#ffffff"
             });
         });
 
-        // ... (ส่วน YT.Player และ Logic การเล่นเพลง เหมือนเดิมทุกอย่าง) ...
+        socket.on('playSong', (song) => {
+            document.getElementById('idle-screen').style.display = 'none';
+            const statusBar = document.getElementById('status-bar');
+            document.getElementById('song-title').innerText = song.title;
+            document.getElementById('song-singer').innerText = `🎤 ร้องโดย: ${song.requester}`;
+            
+            statusBar.style.display = 'block';
+            document.getElementById('qr-container').style.opacity = '0.3';
+            setTimeout(() => { statusBar.style.display = 'none'; }, 8000);
+
+            if(player && player.loadVideoById) {
+                player.loadVideoById(song.id);
+            }
+        });
+
+        socket.on('stopPlayer', () => {
+             if (player && player.stopVideo) player.stopVideo();
+             document.getElementById('idle-screen').style.display = 'flex';
+             document.getElementById('qr-container').style.opacity = '1';
+        });
+
+        socket.on('replaySong', () => {
+            if (player && player.seekTo) {
+                player.seekTo(0, true);
+                player.playVideo();
+                const statusBar = document.getElementById('status-bar');
+                statusBar.style.display = 'block';
+                document.getElementById('song-singer').innerText = "↺ เอาใหม่อีกรอบ!";
+                setTimeout(() => { statusBar.style.display = 'none'; }, 3000);
+            }
+        });
+
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 height: '100%', width: '100%', videoId: '',
-                playerVars: { 'autoplay': 1, 'controls': 0 },
+                playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1, 'iv_load_policy': 3, 'rel': 0 },
                 events: { 'onStateChange': onPlayerStateChange }
             });
         }
@@ -79,37 +157,6 @@
                 socket.emit('songEnded');
             }
         }
-
-       socket.on('playSong', (song) => {
-            // จัดการข้อความที่จะโชว์
-            const statusText = document.getElementById('status');
-            
-            // ใช้ HTML แสดงผลให้สวยงาม
-            statusText.innerHTML = `
-                <div style="font-size: 0.5em; opacity: 0.8;">กำลังเล่นเพลง</div>
-                ${song.title}<br>
-                <div style="font-size: 0.6em; color: #ffeb3b; margin-top: 10px;">
-                    🎤 ร้องโดย: ${song.requester}
-                </div>
-            `;
-            
-            statusText.style.display = 'block';
-            
-            // ซ่อนข้อความหลังผ่านไป 8 วินาที (โชว์นานหน่อยจะได้เห็นทั่วกัน)
-            setTimeout(() => {
-                statusText.style.display = 'none';
-            }, 8000);
-
-            if(player && player.loadVideoById) {
-                player.loadVideoById(song.id);
-            }
-        });
-
-        socket.on('stopPlayer', () => {
-             if (player && player.stopVideo) player.stopVideo();
-             document.getElementById('status').style.display = 'block';
-             document.getElementById('status').innerText = "คิวว่างแล้วจ้า";
-        });
     </script>
 </body>
 </html>
