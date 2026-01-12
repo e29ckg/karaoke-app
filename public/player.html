@@ -52,8 +52,8 @@
         let player;
 
         // รับ IP จาก Server มาสร้าง QR Code
-        socket.on('serverIp', (ip) => {
-            const url = `http://${ip}:3000/admin.html`;
+        socket.on('serverDomain', (ip) => {
+            const url = `${ip}/admin.html`;
             document.getElementById('ip-text').innerText = url;
             
             // ล้าง QR เก่า (ถ้ามี) แล้วสร้างใหม่
@@ -80,13 +80,29 @@
             }
         }
 
-        socket.on('playSong', (song) => {
-            // ซ่อน Status เมื่อเล่นเพลง
-            document.getElementById('status').style.display = 'none';
-            // ซ่อน QR Code ตอนเล่นเพลงก็ได้ (ถ้าไม่อยากให้เกะกะ) หรือจะปล่อยไว้ก็ได้
-            // document.getElementById('qr-container').style.opacity = '0.3'; 
+       socket.on('playSong', (song) => {
+            // จัดการข้อความที่จะโชว์
+            const statusText = document.getElementById('status');
             
-            if(player && player.loadVideoById) player.loadVideoById(song.id);
+            // ใช้ HTML แสดงผลให้สวยงาม
+            statusText.innerHTML = `
+                <div style="font-size: 0.5em; opacity: 0.8;">กำลังเล่นเพลง</div>
+                ${song.title}<br>
+                <div style="font-size: 0.6em; color: #ffeb3b; margin-top: 10px;">
+                    🎤 ร้องโดย: ${song.requester}
+                </div>
+            `;
+            
+            statusText.style.display = 'block';
+            
+            // ซ่อนข้อความหลังผ่านไป 8 วินาที (โชว์นานหน่อยจะได้เห็นทั่วกัน)
+            setTimeout(() => {
+                statusText.style.display = 'none';
+            }, 8000);
+
+            if(player && player.loadVideoById) {
+                player.loadVideoById(song.id);
+            }
         });
 
         socket.on('stopPlayer', () => {

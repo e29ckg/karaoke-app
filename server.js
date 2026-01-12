@@ -1,3 +1,6 @@
+// 1. เรียกใช้ dotenv บรรทัดแรกสุด
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
@@ -6,14 +9,25 @@ const path = require('path');
 const axios = require('axios');
 const os = require('os');
 
-const YOUTUBE_API_KEY = 'xxxxxx';
-
-// ให้บริการไฟล์ Static (HTML, CSS)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ตัวแปรเก็บคิวเพลง (ในหน่วยความจำ)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'player.html'));
+});
+
+// 2. รับค่าจาก .env
+const PORT = process.env.PORT || 3000;
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+
+// เช็คว่าใส่ Key หรือยัง
+if (!YOUTUBE_API_KEY) {
+    console.error("❌ ERROR: กรุณาใส่ YOUTUBE_API_KEY ในไฟล์ .env");
+    process.exit(1);
+}
+
 let songQueue = [];
 
+// ฟังก์ชันหา Local IP (ใช้กรณีไม่ได้ตั้งค่า DOMAIN)
 function getLocalIpAddress() {
     const interfaces = os.networkInterfaces();
     for (const name of Object.keys(interfaces)) {
@@ -29,30 +43,45 @@ function getLocalIpAddress() {
 io.on('connection', (socket) => {
     console.log('User connected');
 
-    // เมื่อ Admin หรือ Player เข้ามา ให้ส่งคิวปัจจุบันไปให้ดู
     socket.emit('updateQueue', songQueue);
 
-    socket.emit('serverIp', getLocalIpAddress());
+    // 3. Logic การส่งที่อยู่ Server (ฉลาดขึ้น)
+    // ถ้าใน .env มีค่า DOMAIN ให้ใช้ค่าคนั้น
+    // ถ้าไม่มี ให้สร้าง URL จาก IP เครื่อง (สำหรับเล่น Local)
+    let serverUrl;
+    if (process.env.DOMAIN) {
+        serverUrl = process.env.DOMAIN;
+    } else {
+        const ip = getLocalIpAddress();
+        serverUrl = `http://${ip}:${PORT}`;
+    }
+    
+    // ส่งไปให้หน้าจอสร้าง QR Code
+    socket.emit('serverDomain', serverUrl);
 
-    // 1. รับเพลงใหม่จาก Admin (แก้ใหม่)
+    // --- ส่วน Logic เดิม (addSong, searchSong ฯลฯ) ไม่ต้องเปลี่ยน ---
+    
+// รับเพลงใหม่ พร้อมชื่อคนร้อง
     socket.on('addSong', (data) => {
         let song;
 
-        // เช็คว่าส่งมาแบบไหน (ถ้ามาจากหน้าค้นหา จะส่งมาเป็น Object {id, title})
         if (typeof data === 'object') {
             song = {
                 id: data.id,
-                title: data.title
+                title: data.title,
+                // เพิ่มบรรทัดนี้: รับชื่อคนร้อง ถ้าไม่มีให้ใส่ว่า "ไม่ระบุตัวตน"
+                requester: data.requester || 'ไม่ระบุตัวตน' 
             };
         } else {
-            // กรณีเผื่อไว้: ถ้าส่งมาแต่ ID (เช่น พิมพ์ลิงก์เอง)
+            // กรณีเผื่อไว้ (Legacy)
             song = {
                 id: data,
-                title: `Song ID: ${data}` 
+                title: `Song ID: ${data}`,
+                requester: 'Admin'
             };
         }
 
-        console.log("Adding song:", song.title); // เช็คใน Terminal ดูว่าชื่อมาไหม
+        console.log(`Adding song: ${song.title} by ${song.requester}`); // เช็ค Log
 
         songQueue.push(song);
         io.emit('updateQueue', songQueue);
@@ -62,103 +91,68 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 2. เมื่อเพลงจบ (Player แจ้งมา)
     socket.on('songEnded', () => {
-        songQueue.shift(); // เอาเพลงที่จบแล้วออกจากคิว
-        io.emit('updateQueue', songQueue); // อัปเดตคิวใหม่
-
-        if (songQueue.length > 0) {
-            // เล่นเพลงถัดไป
-            io.emit('playSong', songQueue[0]);
-        }
-    });
-
-    // 3. รับคำสั่ง "ตัดเพลง" จาก Admin (เพิ่มส่วนนี้)
-    socket.on('skipSong', () => {
-        console.log("Skipping song...");
-        
-        // ลบเพลงปัจจุบันออกจากคิว
-        if (songQueue.length > 0) {
-            songQueue.shift(); 
-        }
-
-        // อัปเดตรายการคิวให้ทุกหน้าจอรู้
+        songQueue.shift();
         io.emit('updateQueue', songQueue);
-
-        // ตรวจสอบว่ายังมีเพลงเหลือไหม
         if (songQueue.length > 0) {
-            // มีเพลงต่อ -> สั่งให้เล่นเพลงถัดไปทันที
             io.emit('playSong', songQueue[0]);
         } else {
-            // ไม่มีเพลงแล้ว -> สั่งให้ Player หยุด
             io.emit('stopPlayer');
         }
     });
 
-    // 4. ระบบค้นหาเพลง (เพิ่มใหม่)
-    socket.on('searchSong', async (query) => {
-            console.log("Searching for:", query);
-            try {
-                const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
-                    params: {
-                        part: 'snippet',
-                        q: query + ' karaoke คาราโอเกะ',
-                        type: 'video',
-                        key: YOUTUBE_API_KEY,
-                        maxResults: 5
-                    },
-                    // เพิ่มส่วน headers นี้เข้าไปครับ
-                    headers: {
-                        'Referer': 'http://localhost:3000/' 
-                    }
-                });
-                socket.emit('searchResults', response.data.items);
-
-            } catch (error) {
-                // *** แก้ไขตรงนี้ครับ ***
-                if (error.response) {
-                    console.log("========= รายละเอียด ERROR (Google บอกมาว่า) =========");
-                    // ปริ้นท์รายละเอียดออกมาดู
-                    console.log(JSON.stringify(error.response.data, null, 2)); 
-                    console.log("==================================================");
-                } else {
-                    console.error("Error Message:", error.message);
-                }
-            }
-        });
-
-        // 5. ลบเพลงออกจากคิว (เฉพาะเพลงที่รออยู่)
-    socket.on('deleteSong', (index) => {
-        // ห้ามลบเพลงที่ 0 (กำลังเล่น) ให้ใช้ปุ่ม Skip แทน
-        if (index > 0 && index < songQueue.length) {
-            console.log(`Deleting song at index ${index}`);
-            songQueue.splice(index, 1); // ลบออก 1 ตัว
-            io.emit('updateQueue', songQueue); // อัปเดตหน้าจอทุกคน
+    socket.on('skipSong', () => {
+        if (songQueue.length > 0) songQueue.shift();
+        io.emit('updateQueue', songQueue);
+        if (songQueue.length > 0) {
+            io.emit('playSong', songQueue[0]);
+        } else {
+            io.emit('stopPlayer');
         }
     });
 
-    // 6. ลัดคิว (ย้ายมาเป็นเพลงถัดไป)
-    socket.on('prioritizeSong', (index) => {
-        // ต้องเป็นเพลงลำดับที่ 2 ขึ้นไป (index > 1) ถึงจะย้ายได้
-        // เพราะ index 0 คือกำลังเล่น, index 1 คือเพลงถัดไปอยู่แล้ว
-        if (index > 1 && index < songQueue.length) {
-            console.log(`Moving song at index ${index} to top`);
-            
-            // ดึงเพลงนั้นออกมา (splice คืนค่าเป็น array เลยต้องเอาตัวที่ [0])
-            const songToMove = songQueue.splice(index, 1)[0];
-            
-            // แทรกกลับเข้าไปที่ตำแหน่งที่ 1 (ต่อจากเพลงที่เล่นอยู่)
-            songQueue.splice(1, 0, songToMove);
-            
+    socket.on('deleteSong', (index) => {
+        if (index > 0 && index < songQueue.length) {
+            songQueue.splice(index, 1);
             io.emit('updateQueue', songQueue);
+        }
+    });
+
+    socket.on('prioritizeSong', (index) => {
+        if (index > 1 && index < songQueue.length) {
+            const songToMove = songQueue.splice(index, 1)[0];
+            songQueue.splice(1, 0, songToMove);
+            io.emit('updateQueue', songQueue);
+        }
+    });
+
+    socket.on('searchSong', async (query) => {
+        try {
+            const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+                params: {
+                    part: 'snippet',
+                    q: query + ' karaoke',
+                    type: 'video',
+                    key: YOUTUBE_API_KEY, // ใช้ตัวแปรจาก .env
+                    maxResults: 5
+                },
+                // headers: { 'Referer': 'http://localhost:3000/' } // เปิดใช้ถ้า API Key ล็อก Referer
+            });
+            socket.emit('searchResults', response.data.items);
+        } catch (error) {
+            console.error("Search Error:", error.message);
         }
     });
 });
 
-// เริ่ม Server ที่ Port 3000
-http.listen(3000, () => {
-    const ip = getLocalIpAddress();
-    console.log(`Karaoke Server running on:`);
-    console.log(`- Local:   http://localhost:3000`);
-    console.log(`- Network: http://${ip}:3000 (ใช้มือถือเข้าลิงก์นี้)`);
+http.listen(PORT, () => {
+    console.log(`----------------------------------------`);
+    console.log(`🎤 Karaoke Server Running!`);
+    if (process.env.DOMAIN) {
+        console.log(`🌍 Domain Mode: ${process.env.DOMAIN}`);
+    } else {
+        const ip = getLocalIpAddress();
+        console.log(`🏠 Local Mode:  http://${ip}:${PORT}`);
+    }
+    console.log(`----------------------------------------`);
 });

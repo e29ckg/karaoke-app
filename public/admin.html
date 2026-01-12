@@ -30,6 +30,12 @@
     </nav>
 
     <div class="container">
+        <div class="card mb-3 border-info">
+            <div class="card-body p-3 bg-info bg-opacity-10">
+                <label class="form-label fw-bold"><i class="fas fa-user"></i> ชื่อคนร้อง:</label>
+                <input type="text" id="singerName" class="form-control" placeholder="พิมพ์ชื่อเล่นของคุณที่นี่... (เช่น พี่โจ้)">
+            </div>
+        </div>
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-search"></i> ค้นหาเพลง</h5>
@@ -92,9 +98,29 @@
         });
 
         function selectSong(id, title) {
-            socket.emit('addSong', { id: id, title: title });
+            // ดึงชื่อจากช่อง input
+            const name = document.getElementById('singerName').value;
+            
+            // เช็คว่าใส่ชื่อหรือยัง? ถ้ายังให้เตือนหน่อย (หรือจะปล่อยผ่านก็ได้)
+            // if (!name.trim()) {
+            //     alert("กรุณาใส่ชื่อคนร้องก่อนครับ เพื่อนจะได้รู้ว่าเพลงใคร 😄");
+            //     document.getElementById('singerName').focus();
+            //     return;
+            // }
+
+            // ส่งข้อมูลไปทั้ง ID, Title, และ Requester (ชื่อคนร้อง)
+            socket.emit('addSong', { 
+                id: id, 
+                title: title, 
+                requester: name 
+            });
+            
+            // ล้างช่องค้นหา แต่ *ไม่ต้องล้างชื่อคนร้อง* (เผื่อเขากดเพลงต่อ)
             document.getElementById('searchInput').value = '';
             document.getElementById('searchResults').innerHTML = '';
+            
+            // แจ้งเตือนเล็กน้อย
+            // alert(`จัดเพลง ${title} ให้ ${name} แล้ว!`);
         }
 
         function skipSong() {
@@ -133,7 +159,10 @@
                 item.innerHTML = `
                     <div class="d-flex align-items-center overflow-hidden">
                         <span class="badge bg-secondary me-2 rounded-pill">${index + 1}</span>
-                        <span class="text-truncate">${song.title}</span>
+                        <div class="d-flex flex-column text-truncate">
+                            <span class="fw-bold text-truncate">${song.title}</span>
+                            <small class="text-muted"><i class="fas fa-microphone"></i> ร้องโดย: ${song.requester}</small>
+                        </div>
                     </div>
                     <div class="ms-2 flex-shrink-0">
                         ${controls}
