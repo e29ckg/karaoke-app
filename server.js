@@ -6,7 +6,7 @@ const path = require('path');
 const axios = require('axios');
 const os = require('os');
 
-const YOUTUBE_API_KEY = 'AIzaSyA5D1utXNTHkuHYx9k8U0qR-nu60tJ4MoM';
+const YOUTUBE_API_KEY = 'xxxxxx';
 
 // ให้บริการไฟล์ Static (HTML, CSS)
 app.use(express.static(path.join(__dirname, 'public')));
