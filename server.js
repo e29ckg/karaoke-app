@@ -153,7 +153,7 @@ io.on('connection', (socket) => {
                 const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
                     params: {
                         part: 'snippet',
-                        q: query + ' karaoke คาราโอเกะ -cover',
+                        q: query + ' karaoke คาราโอเกะ',
                         type: 'video',
                         key: currentKey.trim(), // trim ตัดช่องว่างเผื่อมี
                         maxResults: 10
