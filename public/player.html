@@ -2,6 +2,8 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark"> 
     <title>Karaoke Player</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎤</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
@@ -50,67 +52,90 @@
         }
         .play-btn { font-size: 80px; color: white; transition: transform 0.2s; }
         .play-btn:hover { transform: scale(1.1); color: #4CAF50; }
-        /* Container สำหรับ Effect */
-    #effect-container {
-        position: fixed;
-        bottom: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; /* เพื่อให้กดทะลุได้ ไม่บังวิดีโอ */
-        z-index: 9999;
-        overflow: hidden;
-    }
-
-    /* ตัว Emoji ที่จะลอย */
-    .floating-emoji {
-        position: absolute;
-        bottom: -50px; /* เริ่มต้นจากใต้จอ */
-        font-size: 4rem; /* ขนาด Emoji */
-        animation: floatUp 4s ease-in forwards;
-        opacity: 0.8;
-    }
-
-    /* อนิเมชั่นลอยขึ้น */
-    @keyframes floatUp {
-        0% { transform: translateY(0) scale(0.5); opacity: 0; }
-        10% { opacity: 1; }
-        100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
-    }
-    /* ป้ายชื่อคนส่ง */
-    .effect-notification {
-        position: fixed;
-        /* ปรับลงมาหน่อย เพื่อหลบป้ายชื่อเพลง (song-title) */
-        top: 15%; 
-        left: 50%;
-        transform: translateX(-50%);
         
-        background-color: rgba(0, 0, 0, 0.7);
-        color: #fff;
-        padding: 15px 30px;
-        border-radius: 50px;
-        font-size: 2rem;
-        font-weight: bold;
-        border: 2px solid #ffc107;
-        box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.5s;
-        pointer-events: none;
-        white-space: nowrap;
-    }
-    
-    .effect-notification.show {
-        opacity: 1;
-        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+        /* Container สำหรับ Effect */
+        #effect-container {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* เพื่อให้กดทะลุได้ ไม่บังวิดีโอ */
+            z-index: 9999;
+            overflow: hidden;
+        }
 
-    @keyframes popIn {
-        from { transform: translateX(-50%) scale(0.5); }
-        to { transform: translateX(-50%) scale(1); }
-    }
+        /* ตัว Emoji ที่จะลอย */
+        .floating-emoji {
+            position: absolute;
+            bottom: -50px; /* เริ่มต้นจากใต้จอ */
+            font-size: 4rem; /* ขนาด Emoji */
+            animation: floatUp 4s ease-in forwards;
+            opacity: 0.8;
+        }
+
+        /* อนิเมชั่นลอยขึ้น */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
+        }
+
+        /* ป้ายชื่อคนส่ง (Fix สำหรับ WebOS/Tizen) */
+        .effect-notification {
+            position: fixed;
+            top: 15%; 
+            left: 50%;
+            transform: translateX(-50%);
+            
+            /* พื้นหลังทึบเกือบ 100% เพื่อป้องกันทีวีปรับสี */
+            background-color: rgba(0, 0, 0, 0.95) !important;
+            
+            /* บังคับสีขาว */
+            color: #ffffff !important;
+            
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 2rem;
+            font-weight: bold;
+            
+            /* ขอบและเงาชัดๆ */
+            border: 3px solid #ffc107 !important;
+            box-shadow: 0 0 25px rgba(255, 193, 7, 0.8) !important;
+            
+            /* เงาตัวอักษรสีดำ (สำคัญมากสำหรับทีวี) */
+            text-shadow: 2px 2px 4px #000000 !important;
+
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            white-space: nowrap;
+
+            /* ป้องกันการกระพริบ */
+            backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* [NEW] Class เฉพาะสำหรับชื่อคนส่ง (สีเหลืองทอง) */
+        .sender-name {
+            color: #ffc107 !important; 
+            font-weight: 900 !important;
+            text-shadow: 2px 2px 0px #000000 !important; /* ขอบดำหนา */
+        }
+        
+        .effect-notification.show {
+            opacity: 1;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: translateX(-50%) scale(0.5); }
+            to { transform: translateX(-50%) scale(1); }
+        }
     </style>
 </head>
 <body>
     <div id="effect-container"></div>
-<div id="effect-notify" class="effect-notification"></div>
+    <div id="effect-notify" class="effect-notification"></div>
+    
     <div id="start-overlay" onclick="startSystem()">
         <div class="play-btn">▶</div>
         <h2 style="color:white; margin-top:20px;">คลิกเพื่อเริ่มระบบคาราโอเกะ</h2>
@@ -146,14 +171,11 @@
         let currentRoom = urlParams.get('room');
 
         if (!currentRoom) {
-            const randomNum = Math.floor(Math.random() * 9000) + 1000; // สุ่มเลข 4 หลัก
+            const randomNum = Math.floor(Math.random() * 9000) + 1000;
             currentRoom = 'Room' + randomNum;
-            
-            // อัปเดต URL บน Browser ให้โชว์เลขห้องด้วย (เผื่อกด Refresh จะได้ห้องเดิม)
             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + currentRoom;
             window.history.replaceState({path:newUrl}, '', newUrl);
         }
-        // แสดงชื่อห้องบนหน้าจอ
         document.getElementById('roomLabel').innerText = `ROOM: ${currentRoom}`;
 
         const socket = io({ transports: ['websocket'] });
@@ -229,62 +251,56 @@
         // รับคำสั่งแสดง Effect
         let notifyTimeout;
 
-    socket.on('showEffect', (data) => {
-        // data.type = 'heart', data.sender = 'พี่โจ้'
-        
-        const container = document.getElementById('effect-container');
-        const notifyBox = document.getElementById('effect-notify');
-        
-        const emojis = {
-            'heart': '❤️',
-            'flower': '🌹',
-            'beer': '🍻',
-            'fire': '🔥'
-        };
-        const symbol = emojis[data.type] || '✨';
+        socket.on('showEffect', (data) => {
+            // data.type = 'heart', data.sender = 'พี่โจ้'
+            
+            const container = document.getElementById('effect-container');
+            const notifyBox = document.getElementById('effect-notify');
+            
+            const emojis = {
+                'heart': '❤️',
+                'flower': '🌹',
+                'beer': '🍻',
+                'fire': '🔥'
+            };
+            const symbol = emojis[data.type] || '✨';
 
-        // --- 1. แสดงป้ายชื่อ ---
-        notifyBox.innerHTML = `<span style="color:#ffc107">${data.sender}</span> ส่ง ${symbol} ให้กำลังใจ!`;
-        notifyBox.classList.add('show');
+            // --- 1. แสดงป้ายชื่อ (ปรับปรุงสำหรับ TV) ---
+            // ใช้ Class .sender-name เพื่อล็อกสีเหลืองทอง
+            // และใช้ Inline Style + text-shadow สำหรับข้อความด้านหลังให้ขาวชัด
+            notifyBox.innerHTML = `<span class="sender-name">${data.sender}</span> <span style="color:white; text-shadow: 2px 2px 0 #000;">ส่ง ${symbol} ให้กำลังใจ!</span>`;
+            
+            notifyBox.classList.add('show');
 
-        // ตั้งเวลาให้ป้ายหายไปใน 3 วินาที
-        clearTimeout(notifyTimeout); // ล้างเวลาเก่าก่อนเผื่อมีคนกดรัวๆ
-        notifyTimeout = setTimeout(() => {
-            notifyBox.classList.remove('show');
-        }, 3000);
+            // ตั้งเวลาให้ป้ายหายไปใน 3 วินาที
+            clearTimeout(notifyTimeout); 
+            notifyTimeout = setTimeout(() => {
+                notifyBox.classList.remove('show');
+            }, 3000);
 
+            // --- 2. ปล่อย Emoji ลอยฟุ้ง ---
+            const count = Math.floor(Math.random() * 5) + 5;
+            for (let i = 0; i < count; i++) {
+                createFloatingEmoji(container, symbol);
+            }
+        });
 
-        // --- 2. ปล่อย Emoji ลอยฟุ้ง (โค้ดเดิม) ---
-        const count = Math.floor(Math.random() * 5) + 5;
-        for (let i = 0; i < count; i++) {
-            createFloatingEmoji(container, symbol);
+        function createFloatingEmoji(container, symbol) {
+            const el = document.createElement('div');
+            el.classList.add('floating-emoji');
+            el.innerText = symbol;
+            
+            el.style.left = Math.random() * 80 + 10 + '%';
+            el.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            el.style.fontSize = (Math.random() * 2 + 2) + 'rem';
+            el.style.animationDelay = Math.random() * 0.5 + 's';
+
+            container.appendChild(el);
+
+            setTimeout(() => {
+                el.remove();
+            }, 5000);
         }
-    });
-
-    function createFloatingEmoji(container, symbol) {
-        const el = document.createElement('div');
-        el.classList.add('floating-emoji');
-        el.innerText = symbol;
-        
-        // สุ่มตำแหน่งแนวนอน (Left 10% - 90%)
-        el.style.left = Math.random() * 80 + 10 + '%';
-        
-        // สุ่มความเร็ว (Animation Duration 3s - 5s)
-        el.style.animationDuration = (Math.random() * 2 + 3) + 's';
-        
-        // สุ่มขนาด (Font Size)
-        el.style.fontSize = (Math.random() * 2 + 2) + 'rem';
-        
-        // สุ่มดีเลย์นิดหน่อยไม่ให้ขึ้นพร้อมกันเป๊ะ
-        el.style.animationDelay = Math.random() * 0.5 + 's';
-
-        container.appendChild(el);
-
-        // ลบ Element ทิ้งเมื่ออนิเมชั่นจบ (เพื่อไม่ให้หนักเครื่อง)
-        setTimeout(() => {
-            el.remove();
-        }, 5000);
-    }
     </script>
 </body>
 </html>

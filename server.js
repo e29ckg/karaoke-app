@@ -40,6 +40,9 @@ let rooms = {};
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'player.html'));
 });
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
 
 // Helper: หา IP เครื่อง
 function getLocalIpAddress() {
