@@ -134,6 +134,17 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- Effect System ---
+    // รับคำสั่งจาก Admin ส่ง Effect
+    socket.on('sendEffect', (data) => {
+        const room = socket.roomName;
+        if (room) {
+            // data ตอนนี้คือ { type: 'heart', sender: 'พี่โจ้' }
+            // ส่งต่อให้ Player ทั้งก้อนเลย
+            io.to(room).emit('showEffect', data);
+        }
+    });
+
     socket.on('deleteSong', (index) => {
         const room = socket.roomName;
         if (rooms[room] && index > 0 && index < rooms[room].length) {
@@ -172,8 +183,10 @@ io.on('connection', (socket) => {
                 const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
                     params: {
                         part: 'snippet',
-                        q: query + ' karaoke คาราโอเกะ -cover',
+                        q: query + ' karaoke คาราโอเกะ', // ของเดิมที่คุณแก้มา (โอเคแล้ว)
                         type: 'video',
+                        videoEmbeddable: 'true', // [แนะนำเพิ่ม] กรองเฉพาะคลิปที่เล่นบนเว็บได้
+                        regionCode: 'TH',        // [แนะนำเพิ่ม] เน้นผลลัพธ์โซนไทย
                         key: currentKey.trim(),
                         maxResults: 10
                     },

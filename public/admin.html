@@ -10,13 +10,139 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { background: #f8f9fa; font-family: 'Sarabun', sans-serif; padding-bottom: 100px; }
-        .queue-item { transition: all 0.2s; border-radius: 10px; margin-bottom: 8px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .queue-item.playing { background: #e3f2fd; border-left: 5px solid #2196F3; }
-        .cover-img { width: 60px; height: 45px; object-fit: cover; border-radius: 6px; }
-        .sticky-top-custom { position: sticky; top: 0; z-index: 1020; background: #f8f9fa; padding-top: 10px; padding-bottom: 10px; }
-        .btn-action { width: 35px; height: 35px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .spinner-overlay { display: none; justify-content: center; padding: 20px; }
-    </style>
+            .queue-item { transition: all 0.2s; border-radius: 10px; margin-bottom: 8px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            .queue-item.playing { background: #e3f2fd; border-left: 5px solid #2196F3; }
+            .cover-img { width: 60px; height: 45px; object-fit: cover; border-radius: 6px; }
+            .sticky-top-custom { position: sticky; top: 0; z-index: 1020; background: #f8f9fa; padding-top: 10px; padding-bottom: 10px; }
+            .btn-action { width: 35px; height: 35px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+            .spinner-overlay { display: none; justify-content: center; padding: 20px; }
+            .ad-banner-sticky {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px; /* ความสูงของโฆษณา */
+            background-color: #222;
+            border-top: 2px solid #ffcc00;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
+        }
+    
+    
+        /* --- Shopee Ad Banner Style --- */
+    .ad-shopee-sticky {
+        position: fixed;
+        bottom: 0; left: 0; width: 100%;
+        /* ไล่สีส้ม Shopee ให้ดูมีมิติ */
+        background: linear-gradient(90deg, #ee4d2d 0%, #ff7337 100%);
+        z-index: 9999;
+        box-shadow: 0 -4px 20px rgba(238, 77, 45, 0.3);
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        transform: translateY(100%); /* ซ่อนก่อน แล้วค่อยเด้งขึ้น */
+        animation: slideUpAd 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation-delay: 2s; /* หน่วงเวลา 2 วินาทีค่อยโผล่มา ไม่ให้รกตอนเข้าเว็บ */
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        text-decoration: none; /* ลบขีดเส้นใต้ */
+    }
+
+    @keyframes slideUpAd {
+        to { transform: translateY(0); }
+    }
+
+    /* กล่องรูปสินค้า */
+    .ad-shopee-img {
+        width: 50px; height: 50px;
+        background: white;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid white;
+        flex-shrink: 0;
+    }
+
+    /* กล่องข้อความ */
+    .ad-shopee-text {
+        color: white;
+        margin-left: 12px;
+        flex-grow: 1;
+        line-height: 1.2;
+    }
+    .ad-title { font-weight: bold; font-size: 1rem; margin-bottom: 2px; }
+    .ad-desc { font-size: 0.8rem; opacity: 0.9; }
+    
+    /* ปุ่มลูกศร > */
+    .ad-arrow {
+        background: white;
+        color: #ee4d2d;
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* ปุ่มปิด (x) เล็กๆ มุมขวาบน */
+    .ad-close-mini {
+        position: absolute;
+        top: -10px; right: 10px;
+        background: #333;
+        color: white;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        border: 2px solid white;
+    }
+
+    /* ดันเนื้อหาเว็บขึ้นอีกนิด เพื่อไม่ให้บัง Banner */
+    body { padding-bottom: 100px !important; }
+    /* การ์ดควบคุม Effect */
+/* --- CSS สำหรับปุ่ม Effect สไตล์ปาร์ตี้ --- */
+    .card-effect {
+        /* พื้นหลังไล่สีฟ้า-น้ำเงิน สไตล์ Modern */
+        background: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
+        border: none;
+        border-radius: 20px; /* ขอบมนมากหน่อย */
+        box-shadow: 0 4px 15px rgba(20, 136, 204, 0.4); /* เงาฟุ้งๆ */
+    }
+
+    .btn-effect {
+        width: 60px; 
+        height: 60px;
+        border-radius: 50%; /* ทำเป็นปุ่มวงกลม */
+        border: none;
+        font-size: 2rem; /* ไอคอนใหญ่สะใจ */
+        background: rgba(255, 255, 255, 0.2); /* พื้นหลังโปร่งแสง Glassmorphism */
+        backdrop-filter: blur(5px);
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* อนิเมชั่นเด้งดึ๋ง */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent; /* ลบสีเทาเวลากดบนมือถือ */
+    }
+
+    /* เวลากดปุ่ม */
+    .btn-effect:active {
+        transform: scale(0.9) translateY(2px); /* ย่อลงและขยับลงนิดนึง */
+        background: rgba(255, 255, 255, 0.4); /* สว่างขึ้น */
+        box-shadow: 0 0 15px rgba(255,255,255,0.6); /* มีแสงเรือง */
+    }
+
+    /* เพิ่มคลาสสำหรับ Animation ตอนสลับสินค้า */
+    .fade-switch {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.5s ease;
+    }
+</style>
 </head>
 <body>
 
@@ -39,6 +165,20 @@
                         <span class="input-group-text bg-white border-end-0"><i class="fas fa-user text-primary"></i></span>
                         <input type="text" id="singerName" class="form-control border-start-0" placeholder="ใส่ชื่อคนร้อง (เช่น พี่โจ้)...">
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="card card-effect text-white mb-3 mt-3">
+            <div class="card-body p-3 text-center">
+                <small class="text-white-50 mb-3 d-block fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
+                    <i class="fas fa-magic me-1 text-warning"></i> ส่ง กำลังใจ ให้คนเล่นดนตรีกันเถอะ!
+                </small>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-effect" onclick="sendEffect('heart')">❤️</button>
+                    <button class="btn btn-effect" onclick="sendEffect('flower')">🌹</button>
+                    <button class="btn btn-effect" onclick="sendEffect('beer')">🍻</button>
+                    <button class="btn btn-effect" onclick="sendEffect('fire')">🔥</button>
                 </div>
             </div>
         </div>
@@ -75,9 +215,24 @@
         </div>
     </div>
 
+<a href="#" target="_blank" class="ad-shopee-sticky" id="adLink">
+        
+        <div class="ad-close-mini" onclick="event.preventDefault(); document.getElementById('adLink').style.display='none'">✕</div>
+        
+        <img src="" alt="Product" class="ad-shopee-img" id="adImg">
+        
+        <div class="ad-shopee-text">
+            <div class="ad-title" id="adTitle">กำลังโหลดโปร...</div>
+            <div class="ad-desc" id="adDesc">รอสักครู่</div>
+        </div>
+
+        <div class="ad-arrow"><i class="fas fa-chevron-right"></i></div>
+    </a>>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -169,9 +324,31 @@
             });
         }
 
-        function replaySong() {
-            socket.emit('replaySong');
-            Swal.fire({ icon: 'info', title: 'เริ่มเพลงใหม่แล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+       function replaySong() {
+            Swal.fire({
+                title: 'เล่นเพลงนี้ใหม่?',
+                text: "ต้องการเริ่มเล่นเพลงปัจจุบันใหม่อีกครั้งใช่ไหม?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'ใช่, เอาใหม่!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ถ้ากดยืนยัน ถึงจะส่งคำสั่งไป Server
+                    socket.emit('replaySong');
+                    
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'จัดให้! เริ่มเพลงใหม่แล้ว', 
+                        toast: true, 
+                        position: 'top-end', 
+                        showConfirmButton: false, 
+                        timer: 1500 
+                    });
+                }
+            });
         }
 
         function deleteSong(index) {
@@ -235,6 +412,94 @@
             });
             list.innerHTML = html;
         });
+
+       function sendEffect(type) {
+            // 1. ดึงชื่อจากช่องกรอกชื่อ (แก้จาก 'requester' เป็น 'singerName')
+            let senderNameInput = document.getElementById('singerName');
+            let senderName = senderNameInput ? senderNameInput.value : '';
+            
+            // ถ้าไม่ได้กรอกชื่อ ให้ตั้งชื่อเล่นให้
+            if (!senderName || senderName.trim() === '') {
+                senderName = 'FC ขาจร'; 
+            }
+
+            // 2. ส่งข้อมูลไปหา Server (ส่งเป็น Object ทั้งชนิดและชื่อ)
+            socket.emit('sendEffect', { 
+                type: type, 
+                sender: senderName 
+            });
+            
+            // สั่นมือถือ
+            if (navigator.vibrate) navigator.vibrate(50);
+            
+            // Optional: แจ้งเตือนเล็กน้อยว่าส่งแล้ว
+            // Swal.fire({ icon: 'success', title: 'ส่งกำลังใจแล้ว!', toast: true, position: 'top', showConfirmButton: false, timer: 1000 });
+        }
+
+    //   const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/15Q5Z85Kjf8M51pHE0KbJVxaM1YGZk5TU4wVvRxT3kHk/pub?output=csv'; 
+      const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQs0dT2y1dYEV0KPhXEobIk7AjgVYwL3lnJwnOHP3ggvKC6k0LTdKk8dK_ylW0w3E5hwKQKh9tUOVbC/pub?gid=0&single=true&output=csv'; 
+
+    let productList = []; // รอรับข้อมูลจาก Sheet
+    let currentAdIndex = 0;
+
+    // ฟังก์ชันโหลดข้อมูลจาก Google Sheet
+    function loadAdsFromSheet() {
+        Papa.parse(SHEET_URL, {
+            download: true,
+            header: true, // บอกว่าบรรทัดแรกคือหัวข้อ (title, desc, img, link)
+            complete: function(results) {
+                // กรองเอาเฉพาะแถวที่มีข้อมูลครบ
+                productList = results.data.filter(item => item.title && item.img && item.link);
+                
+                console.log("โหลดโฆษณามาแล้ว:", productList.length, "รายการ");
+                
+                if (productList.length > 0) {
+                    rotateAd(); // เริ่มโชว์ทันทีเมื่อข้อมูลมา
+                    setInterval(rotateAd, 10000); // ตั้งเวลาเปลี่ยนทุก 10 วิ
+                }
+            },
+            error: function(err) {
+                console.error("โหลด Sheet ไม่ได้:", err);
+                // ถ้าโหลดไม่ได้ อาจจะใส่ข้อมูลสำรองไว้ตรงนี้ก็ได้
+            }
+        });
+    }
+
+    function rotateAd() {
+        // ถ้ายังไม่มีข้อมูล หรือข้อมูลว่างเปล่า ให้หยุดทำงาน
+        if (productList.length === 0) return;
+
+        const adLink = document.getElementById('adLink');
+        const adImg = document.getElementById('adImg');
+        const adTitle = document.getElementById('adTitle');
+        const adDesc = document.getElementById('adDesc');
+
+        // 1. Fade Out
+        adLink.classList.add('fade-switch');
+
+        setTimeout(() => {
+            const product = productList[currentAdIndex];
+
+            // อัปเดตข้อมูล
+            if(product) {
+                adImg.src = product.img;
+                adTitle.innerText = product.title;
+                adDesc.innerText = product.desc || 'โปรโมชั่นพิเศษ'; // ถ้าไม่มี desc ให้ใส่คำนี้แทน
+                adLink.href = product.link;
+            }
+
+            // 2. Fade In
+            adLink.classList.remove('fade-switch');
+
+            // วนลูป
+            currentAdIndex = (currentAdIndex + 1) % productList.length;
+
+        }, 500);
+    }
+
+    // --- เริ่มทำงาน ---
+    // เรียกฟังก์ชันโหลดข้อมูล (แทนการเรียก rotateAd โดยตรง)
+    loadAdsFromSheet();
     </script>
 </body>
 </html>
