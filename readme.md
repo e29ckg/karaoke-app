@@ -27,7 +27,7 @@
 
 1.  **Clone โปรเจกต์**
     ```bash
-    git clone [https://github.com/your-username/karaoke-app.git](https://github.com/your-username/karaoke-app.git)
+    git clone https://github.com/e29ckg/karaoke-app.git
     cd karaoke-app
     ```
 
@@ -41,11 +41,11 @@
     ```env
     PORT=3000
     YOUTUBE_API_KEY=YOUR_GOOGLE_API_KEY_HERE
-    # DOMAIN=[https://your-domain.com](https://your-domain.com) (ใส่เมื่อนำขึ้น Server จริง ถ้าเล่น Local ให้ปิดไว้)
+    # DOMAIN=https://your-domain.com (ใส่เมื่อนำขึ้น Server จริง ถ้าเล่น Local ให้ปิดไว้)
     ```
 
 4.  **วิธีขอ API Key**
-    * ไปที่ [Google Cloud Console](https://console.cloud.google.com/)
+    * ไปที่ https://console.cloud.google.com
     * สร้างโปรเจกต์ใหม่ และ Enable **"YouTube Data API v3"**
     * สร้าง Credentials แบบ **API Key**
     * นำ Key มาใส่ในไฟล์ `.env`
