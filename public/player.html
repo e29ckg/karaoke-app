@@ -142,6 +142,14 @@
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* เปลี่ยนพื้นหลังให้มี Effect ค่อยๆ สว่าง-มืด นิดนึง */
+        #idle-screen {
+            transition: background-image 1s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            background-blend-mode: overlay;
+        }
         @keyframes popIn {
             from { transform: translateX(-50%) scale(0.5); }
             to { transform: translateX(-50%) scale(1); }
@@ -316,6 +324,43 @@
             setTimeout(() => {
                 el.remove();
             }, 5000);
+        }
+
+        // --- [NEW] ระบบภาพพักหน้าจอ (Screensaver Slideshow) ---
+        let bgImages = [];
+        let bgIndex = 0;
+        let slideShowInterval;
+
+        // รับรายการรูปภาพจาก Server
+        socket.on('updateScreensaver', (images) => {
+            bgImages = images;
+            
+            // เคลียร์เวลาเดิมทิ้ง
+            clearInterval(slideShowInterval);
+            
+            if(bgImages.length > 0) {
+                // เปลี่ยนภาพทันที 1 ครั้ง
+                changeBackground(); 
+                // ตั้งเวลาเปลี่ยนภาพทุกๆ 10 วินาที (10000 ms)
+                slideShowInterval = setInterval(changeBackground, 10000);
+            } else {
+                // ถ้าแอดมินลบรูปทิ้งหมด
+                document.getElementById('idle-screen').style.backgroundImage = 'none';
+                document.body.style.backgroundImage = 'none';
+            }
+        });
+
+        function changeBackground() {
+            if (bgImages.length === 0) return;
+            
+            const currentUrl = `url('${bgImages[bgIndex]}')`;
+            const idleScreen = document.getElementById('idle-screen');
+            
+            idleScreen.style.backgroundImage = currentUrl;
+            document.body.style.backgroundImage = currentUrl; // ใส่ที่ body ด้วยเผื่อเป็นขอบเพลง
+            
+            // วนลูป index (ถ้าถึงรูปสุดท้าย ให้กลับไปรูปแรก)
+            bgIndex = (bgIndex + 1) % bgImages.length;
         }
     </script>
 </body>

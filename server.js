@@ -11,32 +11,36 @@ const path = require('path');
 const axios = require('axios');
 const os = require('os');
 
-// Config
+// --- Config ---
 const PORT = process.env.PORT || 3000;
 const DOMAIN = process.env.DOMAIN;
 
 // --- จัดการ API Keys (Multi-Key System) ---
-// ดึงคีย์มาจาก .env แล้วแยกด้วยเครื่องหมาย ,
 const apiKeys = (process.env.YOUTUBE_API_KEY || '').split(',');
 let currentKeyIndex = 0;
 
-// สร้างตัวแปรเก็บสุขภาพของคีย์ (Health Check)
 let keyHealth = apiKeys.map((key, index) => ({
     id: index + 1,
     mask: key ? (key.substring(0, 8) + '...') : 'No Key', 
-    status: 'unknown', // good, dead, warning, unknown, missing
+    status: 'unknown', 
     usage: 0,
     lastError: null
 }));
 
-// Setup Express
+// --- Setup Express ---
 app.use(compression());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ตัวแปรเก็บข้อมูลห้อง
 let rooms = {};
 
-// Routes
+// --- เก็บรายการรูปภาพ Screensaver ---
+let screensaverImages = [
+    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1920',
+    'https://images.unsplash.com/photo-1470229722913-7c092bb21b01?q=80&w=1920'
+];
+
+// --- Routes ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'player.html'));
 });
@@ -58,6 +62,9 @@ function getLocalIpAddress() {
 // --- Socket Logic ---
 io.on('connection', (socket) => {
 
+    // เมื่อมีคนเข้าเว็บ ให้ส่งรูปภาพ Screensaver ปัจจุบันไปให้ทันที
+    socket.emit('updateScreensaver', screensaverImages);
+
     // 1. Join Room
     socket.on('joinRoom', (roomName) => {
         const room = roomName || 'default';
@@ -65,8 +72,6 @@ io.on('connection', (socket) => {
         socket.roomName = room;
 
         if (!rooms[room]) rooms[room] = [];
-
-        // console.log(`Socket ${socket.id} joined room: ${room}`);
 
         socket.emit('updateQueue', rooms[room]);
 
@@ -83,11 +88,7 @@ io.on('connection', (socket) => {
         const room = socket.roomName;
         if (!room || !rooms[room]) return;
 
-        // กัน Memory เต็ม: จำกัด 50 เพลงต่อห้อง
-        if (rooms[room].length >= 50) {
-            // socket.emit('error', 'คิวเต็มแล้วครับ'); 
-            return;
-        }
+        if (rooms[room].length >= 50) return;
 
         let song = {
             id: data.id,
@@ -138,19 +139,16 @@ io.on('connection', (socket) => {
     });
 
     // --- Effect System ---
-    // รับคำสั่งจาก Admin ส่ง Effect
     socket.on('sendEffect', (data) => {
         const room = socket.roomName;
         if (room) {
-            // data ตอนนี้คือ { type: 'heart', sender: 'พี่โจ้' }
-            // ส่งต่อให้ Player ทั้งก้อนเลย
             io.to(room).emit('showEffect', data);
         }
     });
 
     socket.on('deleteSong', (index) => {
         const room = socket.roomName;
-        if (rooms[room] && index > 0 && index < rooms[room].length) {
+        if (rooms[room] && index >= 0 && index < rooms[room].length) {
             rooms[room].splice(index, 1);
             io.to(room).emit('updateQueue', rooms[room]);
         }
@@ -158,23 +156,21 @@ io.on('connection', (socket) => {
 
     socket.on('prioritizeSong', (index) => {
         const room = socket.roomName;
-        if (rooms[room] && index > 1 && index < rooms[room].length) {
+        if (rooms[room] && index >= 0 && index < rooms[room].length) {
             const songToMove = rooms[room].splice(index, 1)[0];
-            rooms[room].splice(1, 0, songToMove);
+            rooms[room].splice(0, 0, songToMove);
             io.to(room).emit('updateQueue', rooms[room]);
         }
     });
 
-    // 4. Search Song (Multi-Key Rotation + Monitoring)
+    // 4. Search Song (Multi-Key Rotation)
     socket.on('searchSong', async (query) => {
         let attempts = 0;
         let success = false;
 
-        // วนลูปหาคีย์ที่ใช้ได้
         while (attempts < apiKeys.length && !success) {
             const currentKey = apiKeys[currentKeyIndex];
             
-            // เช็คว่ามีคีย์ไหม
             if (!currentKey || currentKey.trim() === '') {
                 if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'missing';
                 currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
@@ -186,10 +182,10 @@ io.on('connection', (socket) => {
                 const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
                     params: {
                         part: 'snippet',
-                        q: query + ' karaoke คาราโอเกะ', // ของเดิมที่คุณแก้มา (โอเคแล้ว)
+                        q: query + ' karaoke คาราโอเกะ',
                         type: 'video',
-                        videoEmbeddable: 'true', // [แนะนำเพิ่ม] กรองเฉพาะคลิปที่เล่นบนเว็บได้
-                        regionCode: 'TH',        // [แนะนำเพิ่ม] เน้นผลลัพธ์โซนไทย
+                        videoEmbeddable: 'true', 
+                        regionCode: 'TH',        
                         key: currentKey.trim(),
                         maxResults: 10
                     },
@@ -199,7 +195,6 @@ io.on('connection', (socket) => {
                 socket.emit('searchResults', response.data.items);
                 success = true;
 
-                // [Monitor] บันทึกความสำเร็จ
                 if (keyHealth[currentKeyIndex]) {
                     keyHealth[currentKeyIndex].status = 'good';
                     keyHealth[currentKeyIndex].usage++;
@@ -210,13 +205,12 @@ io.on('connection', (socket) => {
                 const status = error.response ? error.response.status : 'network';
                 console.error(`Key #${currentKeyIndex + 1} Failed: ${status}`);
                 
-                // [Monitor] บันทึก Error
                 if (keyHealth[currentKeyIndex]) {
                     keyHealth[currentKeyIndex].lastError = status;
                 }
 
                 if (status === 403 || status === 429) {
-                    if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'dead'; // คีย์ตาย
+                    if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'dead'; 
                     currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length; 
                     attempts++;
                 } else {
@@ -233,7 +227,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 5. Dashboard Stats (ส่งข้อมูลกลับไปหน้าเว็บ Monitor)
+    // 5. Dashboard Stats 
     socket.on('getDashboardStats', () => {
         const used = process.memoryUsage().heapUsed / 1024 / 1024;
         
@@ -242,8 +236,6 @@ io.on('connection', (socket) => {
             userCount: io.engine.clientsCount,
             uptime: process.uptime(),
             memory: Math.round(used * 100) / 100,
-            
-            // ส่งข้อมูล Key Health Check ไปด้วย
             keys: keyHealth,
             currentKeyIndex: currentKeyIndex
         };
@@ -254,21 +246,26 @@ io.on('connection', (socket) => {
         });
     });
 
+    // รับคำสั่งจากหน้า Dashboard เพื่ออัปเดตชุดรูปภาพใหม่
+    socket.on('saveScreensaver', (images) => {
+        screensaverImages = images;
+        io.emit('updateScreensaver', screensaverImages);
+    });
+
     // 6. Cleanup (ลบห้องเมื่อไม่มีคนอยู่)
     socket.on('disconnect', () => {
         const room = socket.roomName;
         if (room && rooms[room]) {
             const socketsInRoom = io.sockets.adapter.rooms.get(room);
             if (!socketsInRoom || socketsInRoom.size === 0) {
-                // console.log(`Cleaning room: ${room}`);
                 delete rooms[room];
             }
         }
     });
 
-}); // <--- ปีกกาปิด io.on (ที่หายไปของคุณน่าจะคือตัวนี้)
+}); 
 
-// Start Server
+// --- Start Server ---
 http.listen(PORT, () => {
     console.log(`----------------------------------------`);
     console.log(`🚀 Server running on port ${PORT}`);

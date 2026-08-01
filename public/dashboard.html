@@ -121,6 +121,22 @@
             </div>
         </div>
     </div>
+    
+    <!-- [NEW] Screensaver Management -->
+    <div class="card card-stat mb-4">
+        <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-image text-info"></i> จัดการภาพพักหน้าจอ (Screensaver)</h5>
+        </div>
+        <div class="card-body">
+            <div class="input-group mb-3">
+                <input type="text" id="bgImageUrl" class="form-control bg-dark text-white border-secondary" placeholder="วางลิงก์รูปภาพ (URL) เช่น https://.../image.jpg">
+                <button class="btn btn-primary" onclick="addBgImage()"><i class="fas fa-plus"></i> เพิ่มรูป</button>
+            </div>
+            <div id="bgList" class="list-group">
+                <!-- รายการรูปภาพจะมาแสดงตรงนี้ -->
+            </div>
+        </div>
+    </div>
 
     <div class="card mb-4">
         <div class="card-header bg-dark"><i class="fas fa-list"></i> Room Monitor</div>
