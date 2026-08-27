@@ -37,104 +37,68 @@
         .status-title { font-size: 24px; font-weight: bold; white-space: nowrap; max-width: 80vw; overflow: hidden; text-overflow: ellipsis; }
         .status-singer { font-size: 18px; color: #ffca28; margin-top: 5px; }
 
-        /* #idle-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 5; color: white; text-align: center;
-        } */
-
         #idle-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            
-            /* --- [เปลี่ยนพื้นหลังเป็นรูปภาพตรงนี้] --- */
-            background-image: url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1920'); /* เปลี่ยน URL เป็นรูปที่คุณชอบ */
-            background-size: cover; /* จัดภาพให้เต็มจอพอดี */
-            background-position: center; /* จัดภาพให้อยู่กึ่งกลาง */
-            
-            /* ใส่ฟิลเตอร์สีดำโปร่งแสงทับไป 60% เพื่อให้ตัวหนังสือและ QR Code ยังอ่านออก */
+            background-image: url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1920'); 
+            background-size: cover; 
+            background-position: center; 
             background-color: rgba(0, 0, 0, 0.6);
             background-blend-mode: overlay;
-
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 5; color: white; text-align: center;
+            /* เพิ่มลูกเล่นเวลาเปลี่ยนภาพ */
+            transition: background-image 1s ease-in-out;
         }
         
-        /* ปุ่มเริ่มระบบ (สำคัญมาก) */
-        #start-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
-        }
-        .play-btn { font-size: 80px; color: white; transition: transform 0.2s; }
-        .play-btn:hover { transform: scale(1.1); color: #4CAF50; }
-        
-        /* Container สำหรับ Effect */
         #effect-container {
             position: fixed;
             bottom: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* เพื่อให้กดทะลุได้ ไม่บังวิดีโอ */
+            pointer-events: none; 
             z-index: 9999;
             overflow: hidden;
         }
 
-        /* ตัว Emoji ที่จะลอย */
         .floating-emoji {
             position: absolute;
-            bottom: -50px; /* เริ่มต้นจากใต้จอ */
-            font-size: 4rem; /* ขนาด Emoji */
+            bottom: -50px; 
+            font-size: 4rem; 
             animation: floatUp 4s ease-in forwards;
             opacity: 0.8;
         }
 
-        /* อนิเมชั่นลอยขึ้น */
         @keyframes floatUp {
             0% { transform: translateY(0) scale(0.5); opacity: 0; }
             10% { opacity: 1; }
             100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
         }
 
-        /* ป้ายชื่อคนส่ง (Fix สำหรับ WebOS/Tizen) */
         .effect-notification {
             position: fixed;
             top: 15%; 
             left: 50%;
             transform: translateX(-50%);
-            
-            /* พื้นหลังทึบเกือบ 100% เพื่อป้องกันทีวีปรับสี */
             background-color: rgba(0, 0, 0, 0.95) !important;
-            
-            /* บังคับสีขาว */
             color: #ffffff !important;
-            
             padding: 15px 30px;
             border-radius: 50px;
             font-size: 2rem;
             font-weight: bold;
-            
-            /* ขอบและเงาชัดๆ */
             border: 3px solid #ffc107 !important;
             box-shadow: 0 0 25px rgba(255, 193, 7, 0.8) !important;
-            
-            /* เงาตัวอักษรสีดำ (สำคัญมากสำหรับทีวี) */
             text-shadow: 2px 2px 4px #000000 !important;
-
             z-index: 10000;
             opacity: 0;
             transition: opacity 0.5s;
             pointer-events: none;
             white-space: nowrap;
-
-            /* ป้องกันการกระพริบ */
             backface-visibility: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* [NEW] Class เฉพาะสำหรับชื่อคนส่ง (สีเหลืองทอง) */
         .sender-name {
             color: #ffc107 !important; 
             font-weight: 900 !important;
-            text-shadow: 2px 2px 0px #000000 !important; /* ขอบดำหนา */
+            text-shadow: 2px 2px 0px #000000 !important; 
         }
         
         .effect-notification.show {
@@ -142,14 +106,6 @@
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* เปลี่ยนพื้นหลังให้มี Effect ค่อยๆ สว่าง-มืด นิดนึง */
-        #idle-screen {
-            transition: background-image 1s ease-in-out;
-            background-size: cover;
-            background-position: center;
-            background-color: rgba(0, 0, 0, 0.6);
-            background-blend-mode: overlay;
-        }
         @keyframes popIn {
             from { transform: translateX(-50%) scale(0.5); }
             to { transform: translateX(-50%) scale(1); }
@@ -159,12 +115,8 @@
 <body>
     <div id="effect-container"></div>
     <div id="effect-notify" class="effect-notification"></div>
-    
-    <div id="start-overlay" onclick="startSystem()">
-        <div class="play-btn">▶</div>
-        <h2 style="color:white; margin-top:20px;">คลิกเพื่อเริ่มระบบคาราโอเกะ</h2>
-        <p style="color:#aaa;">(จำเป็นต้องคลิกเพื่อให้เสียงออก)</p>
-    </div>
+
+    <!-- ลบส่วน <div id="start-overlay"> ออกไปแล้ว เพื่อให้เปิดมาเจอภาพพักหน้าจอเลย -->
 
     <div id="idle-screen">
         <h1>🎵 Karaoke Ready</h1>
@@ -205,16 +157,7 @@
         const socket = io({ transports: ['websocket'] });
         let player;
 
-        function startSystem() {
-            document.getElementById('start-overlay').style.opacity = '0';
-            setTimeout(() => { document.getElementById('start-overlay').style.display = 'none'; }, 500);
-            
-            if (player && player.playVideo) {
-                player.playVideo(); 
-                setTimeout(() => { player.pauseVideo(); }, 100);
-            }
-        }
-
+        // เชื่อมต่อ Socket
         socket.on('connect', () => {
             socket.emit('joinRoom', currentRoom);
         });
@@ -258,12 +201,23 @@
             }
         });
 
+        // กำหนดค่า YouTube API
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 height: '100%', width: '100%', videoId: '',
                 playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1, 'iv_load_policy': 3, 'rel': 0 },
-                events: { 'onStateChange': onPlayerStateChange }
+                events: { 
+                    'onReady': onPlayerReady, // [ใหม่] เรียกใช้เมื่อ Player โหลดเสร็จ
+                    'onStateChange': onPlayerStateChange 
+                }
             });
+        }
+
+        // [ใหม่] ฟังก์ชันสำหรับรันอัตโนมัติเมื่อ YouTube พร้อมใช้งาน
+        function onPlayerReady(event) {
+            // สั่งให้เล่นวิดีโอ (dummy) และหยุดทันที เพื่อปลดล็อกระบบเสียงอัตโนมัติของเบราว์เซอร์
+            event.target.playVideo(); 
+            setTimeout(() => { event.target.pauseVideo(); }, 100);
         }
 
         function onPlayerStateChange(event) {
@@ -274,35 +228,21 @@
 
         // รับคำสั่งแสดง Effect
         let notifyTimeout;
-
         socket.on('showEffect', (data) => {
-            // data.type = 'heart', data.sender = 'พี่โจ้'
-            
             const container = document.getElementById('effect-container');
             const notifyBox = document.getElementById('effect-notify');
             
-            const emojis = {
-                'heart': '❤️',
-                'flower': '🌹',
-                'beer': '🍻',
-                'fire': '🔥'
-            };
+            const emojis = { 'heart': '❤️', 'flower': '🌹', 'beer': '🍻', 'fire': '🔥' };
             const symbol = emojis[data.type] || '✨';
 
-            // --- 1. แสดงป้ายชื่อ (ปรับปรุงสำหรับ TV) ---
-            // ใช้ Class .sender-name เพื่อล็อกสีเหลืองทอง
-            // และใช้ Inline Style + text-shadow สำหรับข้อความด้านหลังให้ขาวชัด
             notifyBox.innerHTML = `<span class="sender-name">${data.sender}</span> <span style="color:white; text-shadow: 2px 2px 0 #000;">ส่ง ${symbol} ให้กำลังใจ!</span>`;
-            
             notifyBox.classList.add('show');
 
-            // ตั้งเวลาให้ป้ายหายไปใน 3 วินาที
             clearTimeout(notifyTimeout); 
             notifyTimeout = setTimeout(() => {
                 notifyBox.classList.remove('show');
             }, 3000);
 
-            // --- 2. ปล่อย Emoji ลอยฟุ้ง ---
             const count = Math.floor(Math.random() * 5) + 5;
             for (let i = 0; i < count; i++) {
                 createFloatingEmoji(container, symbol);
@@ -321,30 +261,22 @@
 
             container.appendChild(el);
 
-            setTimeout(() => {
-                el.remove();
-            }, 5000);
+            setTimeout(() => { el.remove(); }, 5000);
         }
 
-        // --- [NEW] ระบบภาพพักหน้าจอ (Screensaver Slideshow) ---
+        // ระบบภาพพักหน้าจอ (Screensaver Slideshow)
         let bgImages = [];
         let bgIndex = 0;
         let slideShowInterval;
 
-        // รับรายการรูปภาพจาก Server
         socket.on('updateScreensaver', (images) => {
             bgImages = images;
-            
-            // เคลียร์เวลาเดิมทิ้ง
             clearInterval(slideShowInterval);
             
             if(bgImages.length > 0) {
-                // เปลี่ยนภาพทันที 1 ครั้ง
                 changeBackground(); 
-                // ตั้งเวลาเปลี่ยนภาพทุกๆ 10 วินาที (10000 ms)
                 slideShowInterval = setInterval(changeBackground, 10000);
             } else {
-                // ถ้าแอดมินลบรูปทิ้งหมด
                 document.getElementById('idle-screen').style.backgroundImage = 'none';
                 document.body.style.backgroundImage = 'none';
             }
@@ -352,14 +284,12 @@
 
         function changeBackground() {
             if (bgImages.length === 0) return;
-            
             const currentUrl = `url('${bgImages[bgIndex]}')`;
             const idleScreen = document.getElementById('idle-screen');
             
             idleScreen.style.backgroundImage = currentUrl;
-            document.body.style.backgroundImage = currentUrl; // ใส่ที่ body ด้วยเผื่อเป็นขอบเพลง
+            document.body.style.backgroundImage = currentUrl; 
             
-            // วนลูป index (ถ้าถึงรูปสุดท้าย ให้กลับไปรูปแรก)
             bgIndex = (bgIndex + 1) % bgImages.length;
         }
     </script>

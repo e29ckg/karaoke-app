@@ -249,10 +249,21 @@
 
         function handleEnter(e) { if (e.key === 'Enter') searchSong(); }
 
+        let currentSearchQuery = ''; // [NEW] ตัวแปรสำหรับจำคำค้นหาล่าสุด
+
+        // [NEW] ฟังก์ชันสำหรับปุ่มบังคับค้นหา YouTube
+        function forceYouTubeSearch() {
+            if (!currentSearchQuery) return;
+            document.getElementById('searchLoader').style.display = 'flex';
+            document.getElementById('searchResults').innerHTML = '';
+            // ส่งคำสั่งไปที่ช่องทางใหม่ที่เราเพิ่งสร้างใน Server
+            socket.emit('searchSongYouTube', currentSearchQuery);
+        }
+
         function searchSong() {
             const query = document.getElementById('searchInput').value.trim();
             if (!query) return;
-
+            currentSearchQuery = query; // เก็บคำค้นหาล่าสุด
             document.getElementById('searchLoader').style.display = 'flex';
             document.getElementById('searchResults').innerHTML = '';
             socket.emit('searchSong', query);
@@ -263,7 +274,14 @@
             const list = document.getElementById('searchResults');
             
             if (!results || results.length === 0) {
-                list.innerHTML = '<div class="text-center mt-3 text-muted">ไม่พบเพลงครับ</div>'; 
+                // ถ้าไม่เจอเพลงเลย ก็ให้แสดงปุ่มค้นหาจาก YouTube เผื่อไว้ด้วย
+                list.innerHTML = `
+                    <div class="text-center mt-3 text-muted">ไม่พบเพลงครับ</div>
+                    <div class="text-center mt-4 mb-4">
+                        <button class="btn btn-outline-danger rounded-pill px-4 shadow-sm" onclick="forceYouTubeSearch()">
+                            <i class="fab fa-youtube"></i> ลองค้นหาเพิ่มเติมจาก YouTube
+                        </button>
+                    </div>`; 
                 return;
             }
 
@@ -282,6 +300,15 @@
                     </div>
                 </div>`;
             });
+            
+            // [NEW] เพิ่มปุ่มค้นหาจาก YouTube ไว้ล่างสุดของรายการเสมอ
+            html += `
+            <div class="text-center mt-4 mb-5 pb-3">
+                <button class="btn btn-outline-danger rounded-pill px-4 shadow-sm" onclick="forceYouTubeSearch()">
+                    <i class="fab fa-youtube"></i> ค้นหาเพิ่มเติมจาก YouTube
+                </button>
+            </div>`;
+
             list.innerHTML = html;
         });
 

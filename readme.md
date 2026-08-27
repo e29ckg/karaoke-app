@@ -1,97 +1,86 @@
-# 🎤 Karaoke Party Web App (2 Screens)
+# 🎤 Smart Karaoke System
 
-ระบบคาราโอเกะออนไลน์ ใช้งานง่ายผ่านเว็บเบราว์เซอร์ รองรับการทำงาน 2 หน้าจอ (จอทีวีสำหรับเล่นเพลง + จอมือถือสำหรับสั่งเพลง) เชื่อมต่อกันแบบ Real-time ด้วย Socket.io และใช้แหล่งข้อมูลเพลงจาก YouTube
+ระบบคาราโอเกะแบบ Real-time ที่ออกแบบมาเพื่อการใช้งานร่วมกับ Android TV และสมาร์ทโฟน มาพร้อมกับระบบคิวเพลงอัจฉริยะ การค้นหาที่รวดเร็วผ่านฐานข้อมูลและ YouTube API รวมถึงหน้า Dashboard สไตล์ "Genesis" สำหรับผู้ดูแลระบบ
 
-## ✨ ฟีเจอร์หลัก (Features)
+## ✨ Features (ความสามารถเด่น)
 
-* **2 Screen System:** แยกหน้าจอระหว่าง **Player** (แสดง MV) และ **Admin/Remote** (ค้นหาและสั่งเพลง)
-* **Real-time Queue:** อัปเดตคิวเพลงทันทีทั้ง 2 หน้าจอโดยไม่ต้องรีเฟรช
-* **YouTube Search:** ค้นหาเพลงผ่าน YouTube Data API v3 พร้อมกรองเฉพาะวิดีโอคาราโอเกะ
-* **Smart Queue:**
-    * ✅ เพิ่มเพลงเข้าคิว
-    * ❌ ลบเพลงออกจากคิว
-    * 🔼 ลัดคิว (Prioritize) ย้ายเพลงมาต่อคิวเป็นเพลงถัดไป
-    * ⏭️ ข้ามเพลง (Skip)
-* **Requester Name:** ระบุชื่อคนร้องได้ เพื่อให้รู้ว่าคิวต่อไปเป็นของใคร
-* **QR Code Connect:** สแกน QR Code จากหน้าจอทีวีเพื่อเข้าหน้าสั่งเพลงได้ทันที
-* **Mobile Friendly:** หน้าสั่งเพลงรองรับการใช้งานบนมือถือ (Responsive)
+- **📺 TV Player Autoplay:** ออกแบบมาเพื่อรันบน WebView ของ Android TV พร้อมระบบเล่นวิดีโอต่อเนื่องและข้ามเพลงอัตโนมัติ
+- **📱 Smart Remote:** ผู้ใช้สามารถสแกน QR Code เพื่อใช้สมาร์ทโฟนเป็นรีโมทค้นหาเพลง จัดการคิว และส่ง Effect (Emoji) ขึ้นหน้าจอได้
+- **⚡ Hybrid Search System:** ค้นหาเพลงอย่างรวดเร็วจากฐานข้อมูล (SQLite) หากไม่พบระบบจะสลับไปค้นหาผ่าน YouTube API อัตโนมัติ
+- **💾 Auto-Save Catalog:** เมื่อมีการเลือกเพลงใหม่จาก YouTube API ระบบจะบันทึกลงฐานข้อมูลทันทีเพื่อการเรียกใช้ในครั้งต่อไป
+- **🖼️ Dynamic Screensaver:** ระบบภาพพักหน้าจอเมื่อไม่มีคิวเพลง สามารถเพิ่ม/ลบ URL รูปภาพได้แบบ Real-time ผ่าน Dashboard
+- **📊 Admin Dashboard:** หน้าควบคุมสำหรับผู้ดูแลระบบ (ป้องกันด้วยรหัสผ่าน) เพื่อดูสถิติระบบ (RAM, Uptime), จัดการคลังเพลง, ดูแล API Key และตรวจสอบสถานะห้อง
 
-## 🛠️ เทคโนโลยีที่ใช้ (Tech Stack)
+## 🛠️ Tech Stack (เทคโนโลยีที่ใช้)
 
-* **Backend:** Node.js, Express
-* **Real-time:** Socket.io
-* **Frontend:** HTML5, CSS3, Bootstrap 5
-* **API:** YouTube Data API v3, YouTube IFrame Player API
+- **Backend:** Node.js, Express.js
+- **Real-time Communication:** Socket.io
+- **Database:** SQLite3 (Local File Database)
+- **Frontend (Dashboard):** Vue.js 3, Bootstrap 5, FontAwesome
+- **Design Theme:** Genesis Style (General Sans & DM Sans Typography)
+- **External API:** YouTube Data API v3
 
-## ⚙️ การติดตั้ง (Installation)
+## 📂 Project Structure (โครงสร้างไฟล์)
 
-1.  **Clone โปรเจกต์**
-    ```bash
-    git clone https://github.com/e29ckg/karaoke-app.git
-    cd karaoke-app
-    ```
+```text
+/
+├── server.js              # ไฟล์หลักของฝั่ง Server (Node.js)
+├── import_songs.js        # สคริปต์สำหรับนำเข้าข้อมูลเพลงเบื้องต้น
+├── karaoke.db             # ไฟล์ฐานข้อมูล SQLite (สร้างอัตโนมัติเมื่อรัน)
+├── .env                   # ไฟล์เก็บการตั้งค่าและ API Keys
+├── package.json           # รายการไลบรารีที่จำเป็น
+└── public/                # ไฟล์ฝั่ง Frontend
+    ├── player.html        # หน้าจอหลักสำหรับแสดงผลบนทีวี
+    ├── admin.html         # หน้าจอรีโมทสำหรับผู้ใช้ทั่วไป
+    ├── dashboard.html     # หน้าจอควบคุมสำหรับผู้ดูแลระบบ
+    └── login.html         # หน้าล็อกอินเข้าสู่ Dashboard
 
-2.  **ติดตั้ง dependencies**
-    ```bash
-    npm install
-    ```
+```
 
-3.  **ตั้งค่า Environment Variables**
-    สร้างไฟล์ `.env` ที่ root folder และกำหนดค่าดังนี้:
-    ```env
-    PORT=3000
-    YOUTUBE_API_KEY=YOUR_GOOGLE_API_KEY_HERE
-    # DOMAIN=https://your-domain.com (ใส่เมื่อนำขึ้น Server จริง ถ้าเล่น Local ให้ปิดไว้)
-    ```
+## 🚀 Installation & Setup (วิธีการติดตั้ง)
 
-4.  **วิธีขอ API Key**
-    * ไปที่ https://console.cloud.google.com
-    * สร้างโปรเจกต์ใหม่ และ Enable **"YouTube Data API v3"**
-    * สร้าง Credentials แบบ **API Key**
-    * นำ Key มาใส่ในไฟล์ `.env`
-
-## 🚀 การใช้งาน (Usage)
-
-### แบบ Local (เล่นเครื่องเดียว หรือวง LAN)
-1.  รัน Server:
-    ```bash
-    node server.js
-    # หรือ
-    npm start
-    ```
-2.  เปิด Browser บน PC (สำหรับเป็นจอทีวี): `http://localhost:3000`
-3.  ใช้มือถือสแกน QR Code บนจอ หรือเข้าผ่าน IP เครื่องคอม เช่น `http://192.168.1.x:3000/admin.html`
-
-### แบบ Server จริง (Production / Cloud)
-แนะนำให้ใช้ PM2 ในการรันเพื่อให้ทำงานเบื้องหลังตลอดเวลา
+1. **โคลนโปรเจกต์และติดตั้งไลบรารี:**
 ```bash
-pm2 start server.js --name "karaoke-web"
+npm install
 
 ```
 
-## 📂 โครงสร้างไฟล์ (Project Structure)
 
-```
-karaoke-app/
-├── public/             # ไฟล์ Frontend
-│   ├── admin.html      # หน้าจอสั่งเพลง (มือถือ)
-│   ├── player.html     # หน้าจอเล่นเพลง (ทีวี)
-│   └── css/            # (ถ้ามี)
-├── .env                # เก็บค่า Config และ API Key (ห้ามเอาขึ้น Git)
-├── .gitignore          # ไฟล์ที่ Git จะข้ามไป
-├── package.json        # รายชื่อ Library ที่ใช้
-├── server.js           # โค้ดหลักฝั่ง Server (Node.js)
-└── README.md           # คู่มือการใช้งาน
+*(ไลบรารีหลักที่ใช้: express, socket.io, sqlite3, express-session, axios, dotenv, compression)*
+2. **ตั้งค่า Environment Variables:**
+สร้างไฟล์ `.env` ไว้ในโฟลเดอร์หลัก และกำหนดค่าดังนี้:
+```env
+PORT=3000
+DOMAIN=[http://your-domain.com](http://your-domain.com)  # หรือเว้นไว้เพื่อใช้ IP เครื่อง
+ADMIN_PASSWORD=1234            # รหัสผ่านสำหรับเข้า Dashboard
+YOUTUBE_API_KEY=key1,key2,key3 # รองรับระบบ Multi-key คั่นด้วยเครื่องหมายจุลภาค
 
 ```
 
-## ⚠️ ข้อควรระวัง (Troubleshooting)
 
-* **Error 403 (Forbidden):** ตรวจสอบว่าเปิดใช้งาน YouTube Data API v3 ใน Google Console แล้วหรือยัง และเช็คการตั้งค่า Referrer restrictions ของ API Key
-* **Error 400 (Bad Request):** API Key ไม่ถูกต้อง หรือ Copy มาไม่ครบ
-* **QR Code ไม่ขึ้น:** ตรวจสอบว่า Server สามารถเข้าถึง Internet ได้ หรือตั้งค่า `DOMAIN` ใน `.env` ถูกต้องหรือไม่
+3. **นำเข้าข้อมูลเพลงตั้งต้น (Optional):**
+หากต้องการเพิ่มเพลงตั้งต้นลงในฐานข้อมูล ให้รันสคริปต์:
+```bash
+node import_songs.js
 
-## 🤝 ผู้พัฒนา (Author)
+```
 
-* **E29CKG** - *Initial work*
+
+4. **เริ่มต้นการทำงานของเซิร์ฟเวอร์:**
+```bash
+node server.js
+
+```
+
+
+
+## 🎮 Usage (การใช้งาน)
+
+* **หน้าจอทีวี (TV Player):** เปิดเบราว์เซอร์หรือแอป WebView ไปที่ `http://localhost:3000/`
+* **หน้ารีโมท (User Remote):** เปิดมือถือไปที่ `http://localhost:3000/admin` (หรือสแกน QR Code จากหน้าจอทีวี)
+* **หน้าผู้ดูแลระบบ (Dashboard):** เปิดไปที่ `http://localhost:3000/dashboard` (เข้าสู่ระบบด้วยรหัสผ่านที่ตั้งไว้ใน `.env`)
+
+---
+
+*Developed with ❤️ by Phayao Sonplai (Pawisweewiew)*
 

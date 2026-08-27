@@ -5,170 +5,372 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Karaoke Monitor</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎤</text></svg>">
+    
+    <!-- [NEW] โหลดฟอนต์ตามสไตล์ Genesis -->
+    <link href="https://api.fontshare.com/v2/css?f[]=general-sans@600,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* Dark Theme Setup */
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Sarabun', sans-serif; }
-        .card { background-color: #1e1e1e; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card-header { border-bottom: 1px solid #444; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+        /* --- Genesis Theme Variables --- */
+        :root {
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --secondary: #20970B;
+            --neutral: #9C9C9C;
+            --background: #FAFAFA;
+            --surface: #FFFFFF;
+            --text-primary: #0A0A0A;
+            --text-secondary: #6B6B6B;
+            --border: #E8E8EC;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+        }
+
+        /* --- Typography --- */
+        body { 
+            background-color: var(--background); 
+            color: var(--text-primary); 
+            font-family: 'DM Sans', sans-serif; /* ฟอนต์เนื้อหา */
+            font-size: 15px;
+        }
         
-        /* [NEW] ปรับสี text-muted ให้สว่างขึ้น (สีเทาเงิน) */
-        .text-muted { color: #adb5bd !important; } 
+        h1, h2, h3, h4, h5, h6, .display-font {
+            font-family: 'General Sans', sans-serif; /* ฟอนต์หัวข้อ */
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+        }
+
+        .font-monospace {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .text-muted { color: var(--text-secondary) !important; }
+        .text-primary { color: var(--primary) !important; }
+
+        /* --- Components (Cards & Elevation) --- */
+        .card { 
+            background-color: var(--surface); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            box-shadow: none; /* ไม่มีเงาตอนปกติ */
+            transition: all 0.2s ease;
+        }
         
-        /* Table Styles */
-        .table { color: #e0e0e0; }
-        .table thead { border-bottom: 2px solid #555; color: #fff; }
-        .table-hover tbody tr:hover { color: #fff; background-color: rgba(255,255,255,0.05); }
-        
+        .card-header { 
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border); 
+            font-weight: 700; 
+            padding: 16px 24px;
+        }
+
         /* Hover Effect for Stats */
-        .stat-card:hover { transform: translateY(-5px); transition: 0.2s; border-color: #0d6efd; background-color: #252525; }
+        .stat-card:hover, .hover-card:hover { 
+            transform: translateY(-2px); /* ยกขึ้น -2px */
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08); /* เงาฟุ้ง */
+            border-color: var(--border); 
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            border: none;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99,102,241,0.35); /* เงาเรืองแสงสี Indigo */
+        }
+        .btn-outline-danger {
+            color: var(--error);
+            border-color: var(--error);
+        }
+        .btn-outline-danger:hover {
+            background-color: var(--error);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* --- Inputs --- */
+        .form-control, .input-group-text {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 10px 14px;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12); /* ขอบโฟกัส 3px */
+            background-color: var(--surface);
+        }
+
+        /* --- Table Styles --- */
+        .table { color: var(--text-primary); }
+        .table thead { border-bottom: 1px solid var(--border); }
+        .table thead th { 
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: var(--background);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+        }
+        .table tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border);
+        }
+        .table-hover tbody tr:hover { background-color: var(--background); }
+        
+        /* --- Chips & Badges --- */
+        .badge {
+            border-radius: 9999px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .bg-success { background-color: var(--success) !important; color: white; }
+        .bg-danger { background-color: var(--error) !important; color: white; }
+        .bg-warning { background-color: var(--warning) !important; color: var(--text-primary); }
+        .bg-primary { background-color: var(--primary) !important; color: white; }
+        .bg-secondary { background-color: #F3F4F6 !important; color: var(--text-secondary) !important; }
+        
+        .container-fluid { max-width: 1280px; padding: 24px; }
     </style>
 </head>
 <body>
 
-<div id="app" class="container-fluid p-4">
+<div id="app" class="container-fluid">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="m-0"><i class="fas fa-tachometer-alt text-primary"></i> System Monitor</h2>
-        <div>
-            <span class="badge bg-success me-2">Online</span>
-            <small class="text-muted">Updated: {{ lastUpdate }}</small>
+    <div class="d-flex justify-content-between align-items-center mb-5 mt-3">
+        <h2 class="m-0 display-font">OKE System Interface</h2>
+        <div class="d-flex align-items-center">
+            <span class="badge bg-success me-3 d-flex align-items-center gap-2">
+                <span style="width:6px;height:6px;background:white;border-radius:50%;display:inline-block;"></span> Online
+            </span>
+            <small class="text-muted font-monospace">Updated: {{ lastUpdate }}</small>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <!-- ส่วน Stats (4 กล่อง) -->
+    <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card p-3 stat-card">
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="card p-4 stat-card">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-muted mb-1">Active Rooms</h6>
-                        <h2 class="m-0 text-primary">{{ stats.roomCount }}</h2>
+                        <h6 class="text-muted mb-2 font-monospace text-uppercase" style="font-size: 11px;">Active Rooms</h6>
+                        <h3 class="m-0">{{ stats.roomCount }}</h3>
                     </div>
-                    <i class="fas fa-door-open fa-2x text-secondary opacity-25"></i>
+                    <i class="fas fa-door-open fa-lg" style="color: var(--primary);"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 stat-card">
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="card p-4 stat-card">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-muted mb-1">Online Users</h6>
-                        <h2 class="m-0 text-success">{{ stats.userCount }}</h2>
+                        <h6 class="text-muted mb-2 font-monospace text-uppercase" style="font-size: 11px;">Online Users</h6>
+                        <h3 class="m-0">{{ stats.userCount }}</h3>
                     </div>
-                    <i class="fas fa-users fa-2x text-secondary opacity-25"></i>
+                    <i class="fas fa-users fa-lg" style="color: var(--success);"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 stat-card">
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="card p-4 stat-card">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-muted mb-1">Uptime</h6>
-                        <h4 class="m-0 text-warning">{{ formatUptime(stats.uptime) }}</h4>
+                        <h6 class="text-muted mb-2 font-monospace text-uppercase" style="font-size: 11px;">System Uptime</h6>
+                        <h3 class="m-0 display-font" style="font-size: 24px;">{{ formatUptime(stats.uptime) }}</h3>
                     </div>
-                    <i class="fas fa-clock fa-2x text-secondary opacity-25"></i>
+                    <i class="fas fa-clock fa-lg" style="color: var(--warning);"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 stat-card">
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="card p-4 stat-card">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-muted mb-1">RAM Usage</h6>
-                        <h4 class="m-0 text-info">{{ stats.memory }} MB</h4>
+                        <h6 class="text-muted mb-2 font-monospace text-uppercase" style="font-size: 11px;">RAM Usage</h6>
+                        <h3 class="m-0 display-font" style="font-size: 24px;">{{ stats.memory }} <span style="font-size: 14px; color: var(--text-secondary);">MB</span></h3>
                     </div>
-                    <i class="fas fa-microchip fa-2x text-secondary opacity-25"></i>
+                    <i class="fas fa-microchip fa-lg" style="color: var(--neutral);"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-dark"><i class="fas fa-key"></i> API Key Health</div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-dark mb-0 align-middle">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Key (Masked)</th>
-                            <th>Status</th>
-                            <th>Usage (Hits)</th>
-                            <th>Last Error</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(k, index) in stats.keys" :key="index" :class="{'table-active': index === stats.currentKeyIndex}">
-                            <td>
-                                <span class="badge rounded-pill bg-secondary">{{ index + 1 }}</span>
-                                <span v-if="index === stats.currentKeyIndex" class="badge bg-primary ms-1">Active</span>
-                            </td>
-                            <td class="text-muted font-monospace">{{ k.mask }}</td>
-                            <td>
-                                <span v-if="k.status === 'good'" class="badge bg-success">Good ✅</span>
-                                <span v-else-if="k.status === 'dead'" class="badge bg-danger">Quota Full 💀</span>
-                                <span v-else-if="k.status === 'warning'" class="badge bg-warning text-dark">Warning ⚠️</span>
-                                <span v-else class="badge bg-secondary">Unknown ❓</span>
-                            </td>
-                            <td class="fw-bold text-info">{{ k.usage }}</td>
-                            <td class="text-danger small">{{ k.lastError || '-' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <div class="row g-4 mb-4">
+        <!-- API Key Health -->
+        <div class="col-lg-6">
+            <div class="card h-100 hover-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 display-font" style="font-size: 18px;">API Connectors</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Key Node</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Usage Hits</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(k, index) in stats.keys" :key="index" :style="index === stats.currentKeyIndex ? 'background-color: #EEF2FF;' : ''">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-2">{{ index + 1 }}</span>
+                                            <span class="font-monospace text-muted">{{ k.mask }}</span>
+                                            <span v-if="index === stats.currentKeyIndex" class="badge bg-primary ms-2" style="font-size: 10px;">Active</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span v-if="k.status === 'good'" class="badge bg-success">Healthy</span>
+                                        <span v-else-if="k.status === 'dead'" class="badge bg-danger">Depleted</span>
+                                        <span v-else-if="k.status === 'warning'" class="badge bg-warning">Warning</span>
+                                        <span v-else class="badge bg-secondary">Unknown</span>
+                                    </td>
+                                    <td class="text-end font-monospace fw-bold">{{ k.usage }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Monitor -->
+        <div class="col-lg-6">
+            <div class="card h-100 hover-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 display-font" style="font-size: 18px;">Active Sessions</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Room ID</th>
+                                    <th style="width: 50%;">Now Playing</th>
+                                    <th class="text-end">Queue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(queue, name) in rooms" :key="name">
+                                    <td class="fw-bold text-primary">{{ name }}</td>
+                                    <td>
+                                        <div v-if="queue.length > 0" class="d-flex align-items-center">
+                                            <span style="width:8px;height:8px;background:var(--success);border-radius:50%;display:inline-block;margin-right:8px;animation:pulse 2s infinite;"></span>
+                                            <div class="overflow-hidden">
+                                                <div class="text-truncate fw-bold" style="max-width: 200px; font-size: 14px;">{{ queue[0].title }}</div>
+                                                <small class="text-muted">{{ queue[0].requester }}</small>
+                                            </div>
+                                        </div>
+                                        <div v-else class="text-muted fst-italic" style="font-size: 13px;">Idle state</div>
+                                    </td>
+                                    <td class="text-end"><span class="badge bg-secondary">{{ queue.length }} items</span></td>
+                                </tr>
+                                <tr v-if="Object.keys(rooms).length === 0">
+                                    <td colspan="3" class="text-center py-5 text-muted">No active sessions at this moment.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- [NEW] Screensaver Management -->
-    <div class="card card-stat mb-4">
-        <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-image text-info"></i> จัดการภาพพักหน้าจอ (Screensaver)</h5>
+
+    <!-- ระบบจัดการภาพพักหน้าจอ (Screensaver) -->
+    <div class="card mb-4 hover-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 display-font" style="font-size: 18px;">Display Assets (Screensaver)</h5>
+            <span class="badge bg-secondary">{{ screensavers.length }} Images</span>
         </div>
         <div class="card-body">
-            <div class="input-group mb-3">
-                <input type="text" id="bgImageUrl" class="form-control bg-dark text-white border-secondary" placeholder="วางลิงก์รูปภาพ (URL) เช่น https://.../image.jpg">
-                <button class="btn btn-primary" onclick="addBgImage()"><i class="fas fa-plus"></i> เพิ่มรูป</button>
+            <div class="input-group mb-4" style="max-width: 600px;">
+                <input type="text" v-model="newScreensaverUrl" class="form-control" 
+                       placeholder="Paste image URL here..." 
+                       @keyup.enter="addScreensaver">
+                <button class="btn btn-primary px-4" @click="addScreensaver">
+                    Add Asset
+                </button>
             </div>
-            <div id="bgList" class="list-group">
-                <!-- รายการรูปภาพจะมาแสดงตรงนี้ -->
+            
+            <div class="row g-3">
+                <div v-for="(img, index) in screensavers" :key="index" class="col-md-4 col-lg-3">
+                    <div class="card h-100" style="border-radius: 8px; overflow: hidden;">
+                        <img :src="img" style="height: 120px; width: 100%; object-fit: cover; border-bottom: 1px solid var(--border);">
+                        <div class="p-2 d-flex justify-content-between align-items-center bg-light">
+                            <span class="text-truncate text-muted font-monospace" style="font-size: 11px; max-width: 80%;" :title="img">{{ img }}</span>
+                            <button class="btn btn-sm" style="color: var(--error); padding: 2px 6px;" @click="removeScreensaver(index)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="screensavers.length === 0" class="col-12 text-center py-5">
+                    <div class="text-muted">No display assets configured.</div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header bg-dark"><i class="fas fa-list"></i> Room Monitor</div>
+   
+    <!-- จัดการฐานข้อมูลเพลง (Catalog) + ระบบค้นหา -->
+    <div class="card mb-5 hover-card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5 class="mb-0 display-font" style="font-size: 18px;">Track Catalog</h5>
+            <div class="d-flex align-items-center">
+                <div class="input-group me-3" style="width: 300px;">
+                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" v-model="searchCatalogQuery" class="form-control bg-light border-start-0 ps-0" placeholder="Search by title or ID...">
+                </div>
+                <span class="badge bg-secondary">{{ filteredSongCatalog.length }} Tracks</span>
+            </div>
+        </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-dark mb-0 align-middle">
-                    <thead>
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead style="position: sticky; top: 0; z-index: 1; box-shadow: 0 1px 0 var(--border);">
                         <tr>
-                            <th>Room</th>
-                            <th>Status</th>
-                            <th style="width: 40%;">Now Playing</th>
-                            <th>Queue</th>
+                            <th style="width: 80px; padding-left: 24px;">Cover</th>
+                            <th>Track Title</th>
+                            <th>Video ID</th>
+                            <th class="text-end" style="padding-right: 24px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(queue, name) in rooms" :key="name">
-                            <td class="fw-bold text-primary">{{ name }}</td>
-                            <td>
-                                <span v-if="queue.length > 0" class="badge bg-success">Playing 🎵</span>
-                                <span v-else class="badge bg-secondary">Idle 💤</span>
+                        <tr v-for="song in filteredSongCatalog" :key="song.id">
+                            <td style="padding-left: 24px;">
+                                <img :src="song.thumbnail" alt="thumbnail" style="width: 56px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border);">
                             </td>
-                            <td>
-                                <div v-if="queue.length > 0">
-                                    <div class="text-white">{{ queue[0].title }}</div>
-                                    <small class="text-muted">🎤 {{ queue[0].requester }}</small>
-                                </div>
-                                <div v-else class="text-muted">-</div>
+                            <td class="fw-bold" style="font-size: 14px;">{{ song.title }}</td>
+                            <td class="text-muted font-monospace">{{ song.id }}</td>
+                            <td class="text-end" style="padding-right: 24px;">
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteSongFromCatalog(song.id, song.title)">
+                                    Remove
+                                </button>
                             </td>
-                            <td><span class="badge bg-dark border border-secondary">{{ queue.length }} เพลง</span></td>
                         </tr>
-                        <tr v-if="Object.keys(rooms).length === 0">
-                            <td colspan="4" class="text-center py-4 text-muted">No active rooms currently.</td>
+                        <tr v-if="filteredSongCatalog.length === 0">
+                            <td colspan="4" class="text-center py-5 text-muted">No tracks found matching your criteria.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -189,7 +391,26 @@
                 socket: null,
                 stats: { roomCount: 0, userCount: 0, uptime: 0, memory: 0, keys: [], currentKeyIndex: 0 },
                 rooms: {},
-                lastUpdate: '-'
+                lastUpdate: '-',
+                newSong: { id: '', title: '' },
+                addSongMessage: '',
+                addSongSuccess: false,
+                songCatalog: [],
+                newScreensaverUrl: '',
+                screensavers: [],
+                searchCatalogQuery: ''
+            }
+        },
+        computed: {
+            filteredSongCatalog() {
+                if (!this.searchCatalogQuery) {
+                    return this.songCatalog;
+                }
+                const query = this.searchCatalogQuery.toLowerCase();
+                return this.songCatalog.filter(song => {
+                    return song.title.toLowerCase().includes(query) || 
+                           song.id.toLowerCase().includes(query);
+                });
             }
         },
         mounted() {
@@ -197,6 +418,7 @@
             
             this.socket.on('connect', () => {
                 this.requestData();
+                this.fetchSongCatalog(); 
                 setInterval(() => { this.requestData() }, 3000);
             });
 
@@ -204,6 +426,31 @@
                 this.stats = data.stats;
                 this.rooms = data.rooms;
                 this.lastUpdate = new Date().toLocaleTimeString();
+            });
+
+            this.socket.on('addSongResult', (res) => {
+                this.addSongSuccess = res.success;
+                this.addSongMessage = res.message;
+                
+                if (res.success) {
+                    this.newSong.id = '';
+                    this.newSong.title = '';
+                    this.fetchSongCatalog(); 
+                }
+                
+                setTimeout(() => { this.addSongMessage = ''; }, 4000);
+            });
+
+            this.socket.on('songListResult', (songs) => {
+                this.songCatalog = songs;
+            });
+
+            this.socket.on('deleteSongSuccess', () => {
+                this.fetchSongCatalog();
+            });
+
+            this.socket.on('updateScreensaver', (images) => {
+                this.screensavers = images || [];
             });
         },
         methods: {
@@ -214,6 +461,42 @@
                 const h = Math.floor(seconds / 3600);
                 const m = Math.floor((seconds % 3600) / 60);
                 return `${h}h ${m}m`;
+            },
+            saveNewSong() {
+                if (!this.newSong.id.trim() || !this.newSong.title.trim()) {
+                    this.addSongSuccess = false;
+                    this.addSongMessage = 'กรุณากรอกข้อมูลให้ครบทั้ง 2 ช่องครับ';
+                    return;
+                }
+                
+                const payload = {
+                    id: this.newSong.id.trim(),
+                    title: this.newSong.title.trim()
+                };
+                
+                this.socket.emit('addSongToDB', payload);
+            },
+            fetchSongCatalog() {
+                this.socket.emit('requestSongList');
+            },
+            deleteSongFromCatalog(id, title) {
+                if (confirm(`⚠️ คุณแน่ใจหรือไม่ที่จะลบเพลง "${title}" ออกจากระบบ?`)) {
+                    this.socket.emit('deleteSongFromDB', id);
+                }
+            },
+            addScreensaver() {
+                const url = this.newScreensaverUrl.trim();
+                if (url) {
+                    this.screensavers.push(url);
+                    this.socket.emit('saveScreensaver', this.screensavers);
+                    this.newScreensaverUrl = '';
+                }
+            },
+            removeScreensaver(index) {
+                if (confirm('คุณต้องการลบรูปภาพนี้ออกจากภาพพักหน้าจอใช่หรือไม่?')) {
+                    this.screensavers.splice(index, 1);
+                    this.socket.emit('saveScreensaver', this.screensavers);
+                }
             }
         }
     }).mount('#app');
