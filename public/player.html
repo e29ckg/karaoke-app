@@ -110,13 +110,81 @@
             from { transform: translateX(-50%) scale(0.5); }
             to { transform: translateX(-50%) scale(1); }
         }
+
+        /* หน้าจอเริ่มต้น */
+        #start-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, #1a0533 0%, #000000 70%);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.8s ease;
+        }
+        #start-overlay .pulse-ring {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7b2ff7, #f107a3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem;
+            box-shadow: 0 0 0 0 rgba(123, 47, 247, 0.7);
+            animation: pulse 2s infinite;
+            transition: transform 0.2s ease;
+        }
+        #start-overlay:hover .pulse-ring {
+            transform: scale(1.08);
+        }
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(123, 47, 247, 0.7); }
+            70%  { box-shadow: 0 0 0 30px rgba(123, 47, 247, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(123, 47, 247, 0); }
+        }
+        #start-overlay h1 {
+            margin-top: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        #start-overlay p {
+            color: rgba(255,255,255,0.5);
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        #start-overlay .stars {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        #start-overlay .star {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--d, 3s) infinite var(--delay, 0s);
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
     </style>
 </head>
 <body>
     <div id="effect-container"></div>
     <div id="effect-notify" class="effect-notification"></div>
 
-    <!-- ลบส่วน <div id="start-overlay"> ออกไปแล้ว เพื่อให้เปิดมาเจอภาพพักหน้าจอเลย -->
+    <!-- หน้าจอเริ่มต้น: คลิกเพื่อเริ่มระบบ + ปลดล็อกเสียง -->
+    <div id="start-overlay" onclick="startSystem()">
+        <div class="stars" id="star-field"></div>
+        <div class="pulse-ring">🎤</div>
+        <h1>Karaoke System</h1>
+        <p>แตะหน้าจอเพื่อเริ่มระบบ</p>
+    </div>
 
     <div id="idle-screen">
         <h1>🎵 Karaoke Ready</h1>
@@ -169,19 +237,29 @@
             });
         });
 
-        socket.on('playSong', (song) => {
+        function playSongNow(song) {
             document.getElementById('idle-screen').style.display = 'none';
             const statusBar = document.getElementById('status-bar');
             document.getElementById('song-title').innerText = song.title;
             document.getElementById('song-singer').innerText = `🎤 ร้องโดย: ${song.requester}`;
-            
+
             statusBar.style.display = 'block';
             document.getElementById('qr-container').style.opacity = '0.3';
             setTimeout(() => { statusBar.style.display = 'none'; }, 8000);
 
-            if(player && player.loadVideoById) {
+            if (player && player.loadVideoById) {
                 player.loadVideoById(song.id);
             }
+        }
+
+        socket.on('playSong', (song) => {
+            // ถ้า start-overlay ยังแสดงอยู่ (ยังไม่คลิก) ให้รอไว้ก่อน
+            const overlay = document.getElementById('start-overlay');
+            if (overlay && overlay.style.display !== 'none' && overlay.style.opacity !== '0') {
+                pendingSong = song; // เก็บไว้รอ
+                return;
+            }
+            playSongNow(song);
         });
 
         socket.on('stopPlayer', () => {
@@ -201,23 +279,60 @@
             }
         });
 
+        // === ระบบหน้าจอเริ่มต้น ===
+        let playerReady = false;
+        let pendingSong = null;
+
+        // สร้างดาวในพื้นหลัง
+        const starField = document.getElementById('star-field');
+        for (let i = 0; i < 80; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.cssText = `
+                left: ${Math.random() * 100}%;
+                top:  ${Math.random() * 100}%;
+                --d: ${(Math.random() * 3 + 2).toFixed(1)}s;
+                --delay: ${(Math.random() * 3).toFixed(1)}s;
+                width:  ${Math.random() < 0.2 ? 4 : 2}px;
+                height: ${Math.random() < 0.2 ? 4 : 2}px;
+            `;
+            starField.appendChild(star);
+        }
+
+        function startSystem() {
+            const overlay = document.getElementById('start-overlay');
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            setTimeout(() => { overlay.style.display = 'none'; }, 800);
+
+            // เข้า Fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+
+            // ปลดล็อกเสียงด้วยการสั่ง play แล้วหยุดทันที
+            if (player && player.playVideo) {
+                player.playVideo();
+                setTimeout(() => { player.pauseVideo(); }, 50);
+            }
+
+            // ถ้ามีเพลงรอเล่นอยู่ (ถูกสั่งมาก่อนที่จะ start)
+            if (pendingSong) {
+                setTimeout(() => playSongNow(pendingSong), 200);
+                pendingSong = null;
+            }
+        }
+
         // กำหนดค่า YouTube API
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 height: '100%', width: '100%', videoId: '',
                 playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1, 'iv_load_policy': 3, 'rel': 0 },
-                events: { 
-                    'onReady': onPlayerReady, // [ใหม่] เรียกใช้เมื่อ Player โหลดเสร็จ
-                    'onStateChange': onPlayerStateChange 
+                events: {
+                    'onReady': () => { playerReady = true; },
+                    'onStateChange': onPlayerStateChange
                 }
             });
-        }
-
-        // [ใหม่] ฟังก์ชันสำหรับรันอัตโนมัติเมื่อ YouTube พร้อมใช้งาน
-        function onPlayerReady(event) {
-            // สั่งให้เล่นวิดีโอ (dummy) และหยุดทันที เพื่อปลดล็อกระบบเสียงอัตโนมัติของเบราว์เซอร์
-            event.target.playVideo(); 
-            setTimeout(() => { event.target.pauseVideo(); }, 100);
         }
 
         function onPlayerStateChange(event) {
