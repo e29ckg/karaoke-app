@@ -31,7 +31,7 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS songs (id TEXT PRIMARY KEY, title TEXT, thumbnail TEXT)`);
     // สร้างตารางเก็บภาพสไลด์โชว์
     db.run(`CREATE TABLE IF NOT EXISTS screensavers (id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT)`);
-    
+
     // โหลดภาพ Screensaver จากฐานข้อมูลเข้า Memory ตอนเปิดเซิร์ฟเวอร์
     db.all(`SELECT url FROM screensavers`, (err, rows) => {
         if (!err && rows.length > 0) {
@@ -51,16 +51,16 @@ const apiKeys = (process.env.YOUTUBE_API_KEY || '').split(',');
 let currentKeyIndex = 0;
 let keyHealth = apiKeys.map((key, index) => ({
     id: index + 1,
-    mask: key ? (key.substring(0, 8) + '...') : 'No Key', 
-    status: 'unknown', 
+    mask: key ? (key.substring(0, 8) + '...') : 'No Key',
+    status: 'unknown',
     usage: 0,
     lastError: null
 }));
 
 // --- Setup Express & Middlewares ---
 app.use(compression());
-app.use(express.urlencoded({ extended: true })); // สำหรับอ่านค่าฟอร์ม Login
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ตั้งค่า Session
@@ -132,7 +132,7 @@ io.on('connection', (socket) => {
         socket.emit('updateQueue', rooms[room]);
         let baseUrl = DOMAIN || `http://${getLocalIpAddress()}:${PORT}`;
         socket.emit('serverDomain', `${baseUrl}/admin.html?room=${room}`);
-        if (rooms[room].length > 0) socket.emit('playSong', rooms[room][0]); 
+        if (rooms[room].length > 0) socket.emit('playSong', rooms[room][0]);
     });
 
     // 2. Add Song & Auto-Save
@@ -140,11 +140,11 @@ io.on('connection', (socket) => {
         const room = socket.roomName;
         if (!room || !rooms[room] || rooms[room].length >= 50) return;
 
-        let song = { 
-            id: data.id, 
-            title: data.title, 
-            requester: data.requester || 'ไม่ระบุ', 
-            thumbnail: data.thumbnail || '' 
+        let song = {
+            id: data.id,
+            title: data.title,
+            requester: data.requester || 'ไม่ระบุ',
+            thumbnail: data.thumbnail || ''
         };
 
         // 1. เพิ่มเพลงเข้าคิวของห้อง
@@ -158,21 +158,21 @@ io.on('connection', (socket) => {
         // 2. [NEW] Auto-Save บันทึกลงฐานข้อมูลอัตโนมัติ
         if (song.id && song.title) {
             const thumbUrl = song.thumbnail || `https://img.youtube.com/vi/${song.id}/hqdefault.jpg`;
-            
+
             // ใช้ INSERT OR IGNORE เพื่อป้องกันการบันทึกเพลงที่ id ซ้ำกัน
-            db.run(`INSERT OR IGNORE INTO songs (id, title, thumbnail) VALUES (?, ?, ?)`, 
-                [song.id, song.title, thumbUrl], 
-                function(err) {
+            db.run(`INSERT OR IGNORE INTO songs (id, title, thumbnail) VALUES (?, ?, ?)`,
+                [song.id, song.title, thumbUrl],
+                function (err) {
                     if (err) {
                         console.error("❌ Auto-Save Error:", err.message);
                     } else if (this.changes > 0) {
                         // this.changes > 0 หมายถึงเพิ่งถูกเพิ่มเข้าไปใหม่จริงๆ
                         console.log(`💾 บันทึกเพลงใหม่เข้าฐานข้อมูลอัตโนมัติ: ${song.title}`);
-                        
+
                         // สั่งให้ทุก Dashboard อัปเดตตารางคลังเพลง (ถ้าเปิดหน้า Dashboard ทิ้งไว้)
-                        io.emit('deleteSongSuccess'); 
+                        io.emit('deleteSongSuccess');
                     }
-            });
+                });
         }
     });
 
@@ -181,8 +181,8 @@ io.on('connection', (socket) => {
         else io.to(room).emit('stopPlayer');
     };
 
-    socket.on('replaySong', () => { if(socket.roomName) io.to(socket.roomName).emit('replaySong'); });
-    
+    socket.on('replaySong', () => { if (socket.roomName) io.to(socket.roomName).emit('replaySong'); });
+
     socket.on('songEnded', () => {
         const room = socket.roomName;
         if (rooms[room]) { rooms[room].shift(); io.to(room).emit('updateQueue', rooms[room]); playNextOrStop(room); }
@@ -209,8 +209,8 @@ io.on('connection', (socket) => {
     // --- [NEW] Search Song (ดึงจากฐานข้อมูล SQLite แทน YouTube API) ---
     // 4. Search Song (Database -> Fallback to YouTube API)
     socket.on('searchSong', (query) => {
-        const searchQuery = `%${query}%`; 
-        
+        const searchQuery = `%${query}%`;
+
         // ขั้นที่ 1: ค้นหาในฐานข้อมูล SQLite ก่อน
         db.all(`SELECT * FROM songs WHERE title LIKE ? LIMIT 15`, [searchQuery], async (err, rows) => {
             if (err) {
@@ -229,7 +229,7 @@ io.on('connection', (socket) => {
                     }
                 }));
                 socket.emit('searchResults', formattedResults);
-                
+
             } else {
                 // กรณีที่ 2: ไม่เจอในฐานข้อมูล -> สลับไปใช้ YouTube API
                 console.log(`🌐 ไม่พบในฐานข้อมูล กำลังค้นหา "${query}" ผ่าน YouTube API...`);
@@ -238,7 +238,7 @@ io.on('connection', (socket) => {
 
                 while (attempts < apiKeys.length && !success) {
                     const currentKey = apiKeys[currentKeyIndex];
-                    
+
                     if (!currentKey || currentKey.trim() === '') {
                         if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'missing';
                         currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
@@ -252,14 +252,14 @@ io.on('connection', (socket) => {
                                 part: 'snippet',
                                 q: query + ' karaoke คาราโอเกะ',
                                 type: 'video',
-                                videoEmbeddable: 'true', 
-                                regionCode: 'TH',        
+                                videoEmbeddable: 'true',
+                                regionCode: 'TH',
                                 key: currentKey.trim(),
                                 maxResults: 15
                             },
                             headers: { 'Referer': DOMAIN || `http://localhost:${PORT}/` }
                         });
-                        
+
                         socket.emit('searchResults', response.data.items);
                         success = true;
 
@@ -272,12 +272,12 @@ io.on('connection', (socket) => {
                     } catch (error) {
                         const status = error.response ? error.response.status : 'network';
                         console.error(`Key #${currentKeyIndex + 1} Failed: ${status}`);
-                        
+
                         if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].lastError = status;
 
                         if (status === 403 || status === 429) {
-                            if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'dead'; 
-                            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length; 
+                            if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'dead';
+                            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
                             attempts++;
                         } else {
                             if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'warning';
@@ -302,7 +302,7 @@ io.on('connection', (socket) => {
 
         while (attempts < apiKeys.length && !success) {
             const currentKey = apiKeys[currentKeyIndex];
-            
+
             if (!currentKey || currentKey.trim() === '') {
                 if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'missing';
                 currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
@@ -316,14 +316,14 @@ io.on('connection', (socket) => {
                         part: 'snippet',
                         q: query + ' karaoke คาราโอเกะ',
                         type: 'video',
-                        videoEmbeddable: 'true', 
-                        regionCode: 'TH',        
+                        videoEmbeddable: 'true',
+                        regionCode: 'TH',
                         key: currentKey.trim(),
                         maxResults: 15
                     },
                     headers: { 'Referer': DOMAIN || `http://localhost:${PORT}/` }
                 });
-                
+
                 socket.emit('searchResults', response.data.items);
                 success = true;
 
@@ -336,12 +336,12 @@ io.on('connection', (socket) => {
             } catch (error) {
                 const status = error.response ? error.response.status : 'network';
                 console.error(`Key #${currentKeyIndex + 1} Failed: ${status}`);
-                
+
                 if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].lastError = status;
 
                 if (status === 403 || status === 429) {
-                    if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'dead'; 
-                    currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length; 
+                    if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'dead';
+                    currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
                     attempts++;
                 } else {
                     if (keyHealth[currentKeyIndex]) keyHealth[currentKeyIndex].status = 'warning';
@@ -376,7 +376,7 @@ io.on('connection', (socket) => {
     socket.on('saveScreensaver', (images) => {
         screensaverImages = images;
         io.emit('updateScreensaver', screensaverImages);
-        
+
         // เซฟลง SQLite
         db.serialize(() => {
             db.run(`DELETE FROM screensavers`); // ลบของเก่าออก
@@ -396,7 +396,7 @@ io.on('connection', (socket) => {
     // --- [NEW] รับคำสั่งเพิ่มเพลงลงฐานข้อมูลจาก Dashboard ---
     socket.on('addSongToDB', (songData) => {
         // songData จะมีหน้าตาแบบนี้ { id: 'dQw4w9WgXcQ', title: 'ชื่อเพลง' }
-        
+
         // ตรวจสอบว่ามีข้อมูลครบหรือไม่
         if (!songData || !songData.id || !songData.title) {
             socket.emit('addSongResult', { success: false, message: 'ข้อมูลไม่ครบถ้วน' });
@@ -405,11 +405,11 @@ io.on('connection', (socket) => {
 
         // สร้าง URL สำหรับรูปภาพ Thumbnail อัตโนมัติ
         const thumbnailUrl = `https://img.youtube.com/vi/${songData.id}/hqdefault.jpg`;
-        
+
         // คำสั่ง SQL สำหรับเพิ่มข้อมูล
         const sql = `INSERT INTO songs (id, title, thumbnail) VALUES (?, ?, ?)`;
-        
-        db.run(sql, [songData.id, songData.title, thumbnailUrl], function(err) {
+
+        db.run(sql, [songData.id, songData.title, thumbnailUrl], function (err) {
             if (err) {
                 console.error("❌ Add Song Error:", err.message);
                 // สาเหตุหลักที่ Error มักเกิดจาก id ซ้ำกัน (เพราะเราตั้ง id เป็น PRIMARY KEY)
@@ -438,7 +438,7 @@ io.on('connection', (socket) => {
     // --- [NEW] ลบเพลงออกจากฐานข้อมูล ---
     socket.on('deleteSongFromDB', (id) => {
         // ใช้คำสั่ง DELETE โดยอ้างอิงจาก id 
-        db.run(`DELETE FROM songs WHERE id = ?`, [id], function(err) {
+        db.run(`DELETE FROM songs WHERE id = ?`, [id], function (err) {
             if (err) {
                 console.error("❌ Delete Song Error:", err.message);
             } else {
@@ -448,7 +448,7 @@ io.on('connection', (socket) => {
             }
         });
     });
-}); 
+});
 
 http.listen(PORT, () => {
     console.log(`----------------------------------------`);
